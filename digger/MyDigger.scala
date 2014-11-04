@@ -34,7 +34,7 @@ object MyDigger {
 		val textLength = distLines.map(line => line.length).reduce(_ + _)
 
 		// 生成词表
-		val distWords = distLines.flatMap(line => splitWord(line, maxWordLength))
+		val distWords = distLines.flatMap(line => TextProcessor.splitWord(line, maxWordLength))
 
 
 
