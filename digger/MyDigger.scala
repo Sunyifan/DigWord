@@ -9,10 +9,14 @@ import scala.util.Sorting
 
 object MyDigger {
 	def main(args: Array[String]) {
-		val conf = new SparkConf().setAppName("MyDigger").setMaster("local")
+		val conf = new SparkConf().setAppName("MyDigger")
 		val sc = new SparkContext(conf)
 
 
+		// arg0 输入文件
+		// arg1 频率阈值
+		// arg2 凝结度阈值
+		// arg3 自由熵阈值
 		val srcFile = args(0)
 		val frequencyThreshold = args(1).toDouble
 		val consolidateThreshold = args(2).toDouble
@@ -35,7 +39,6 @@ object MyDigger {
 										.map{item : (String, Int) => (item._1, item._2.toDouble / textLength)}
 		// 过滤低词频
 		val filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
-		filteredFrequencyRDD.saveAsTextFile(args(4))
 
 
 		// 计算凝结度前的准备，取过滤后的此表
@@ -43,7 +46,7 @@ object MyDigger {
 		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 		val broadforwardDic = sc.broadcast(dictionary)
 		filteredFrequencyRDD.persist()
-		filteredFrequencyRDD.map(line => countDoc(line, textLength, broadforwardDic))
+		filteredFrequencyRDD.map(line => countDoc(line, textLength, dictionary))
 
 		// 计算自由熵
 		// 不借助词表来计算自由熵
@@ -71,7 +74,6 @@ object MyDigger {
 		}
 
 		val filteredFreedomRDD = freedomRDD.filter{ item : (String, Double) => item._2 > freedomThreshold}
-		filteredFreedomRDD.saveAsTextFile(args(5))
 	}
 
 
