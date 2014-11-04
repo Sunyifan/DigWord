@@ -12,7 +12,6 @@ object MyDigger {
 		val conf = new SparkConf().setAppName("MyDigger")
 		val sc = new SparkContext(conf)
 
-
 		// arg0 输入文件
 		// arg1 频率阈值
 		// arg2 凝结度阈值
