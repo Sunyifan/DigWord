@@ -4,8 +4,6 @@ package digger
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
 import util.{Calculator, TextProcessor}
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Map
 import scala.util.Sorting
 
 object MyDigger {
