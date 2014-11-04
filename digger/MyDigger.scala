@@ -58,12 +58,12 @@ object MyDigger {
 
 		// part-3:  不借助词表来计算自由熵
 		// 生成此前后缀
-		val wordPrefix = distWords.filter{word => word.length > 1}
+		val wordPrefix = distWords.filter{(word : String) => word.length > 1}
 									.map((word : String) => (word.substring(1), word.charAt(0).toString))
 										.reduceByKey(_ + "|" + _ )
 											.map{case (word : String, prefixList : String) => (word, Calculator.freedom(prefixList))}
 
-		val wordSuffix = distWords.filter{word => word.length > 1}
+		val wordSuffix = distWords.filter{(word : String) => word.length > 1}
 									.map((word : String) => (word.substring(0,word.length - 1), word.charAt(word.length - 1).toString()))
 										.reduceByKey(_ + "|" + _ )
 											.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
