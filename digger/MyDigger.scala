@@ -14,7 +14,7 @@ object MyDigger {
 	// 3. 凝结度阈值
 	// 4. 自由熵阈值
 	// 5. 词长上界
-	def main(args : Array[String]): Unit ={
+	def digwords(args : Array[String]): Unit ={
 		val conf = new SparkConf().setAppName(args(0)).setMaster("local")
 		val sc = new SparkContext(conf)
 
