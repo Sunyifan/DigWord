@@ -1,7 +1,7 @@
 package util
 
 import lib.Searcher
-
+import scala.collection.mutable.Map
 /**
  * Created by abzyme-baixing on 14-11-4.
  */

@@ -15,17 +15,20 @@ object MyDigger {
 	// 4. 自由熵阈值
 	// 5. 词长上界
 	def main(args : Array[String]): Unit ={
-		val conf = new SparkConf().setAppName(args(0)).setMaster("local")
+		val conf = new SparkConf().setAppName(args(0))
 		val sc = new SparkContext(conf)
 
-		val inputPath = args(1)
-		val frequencyThreshold = args(2).toDouble
-		val consolidateThreshold = args(3).toDouble
-		val freedomThreshold = args(4).toDouble
-		val maxWordLength = args(5).toInt
+		val numPartitions = args(1).toInt
+		val inputPath = args(2)
+		val frequencyThreshold = args(3).toDouble
+		val consolidateThreshold = args(4).toDouble
+		val freedomThreshold = args(5).toDouble
+		val maxWordLength = args(6).toInt
+		val outputPath = args(7)
+
 
 		// 初始化文件
-		val distFile = sc.textFile(inputPath)
+		val distFile = sc.textFile(inputPath, numPartitions)
 
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
 		val distLines = distFile.flatMap(line => TextProcessor.preproccess(line))
@@ -81,5 +84,13 @@ object MyDigger {
 		}
 
 		val filteredFreedomRDD = freedomRDD.filter{ item : (String, Double) => item._2 > freedomThreshold}
+
+		// 计算过滤后存在的词
+		val filteredWords = filteredFrequencyRDD.keys
+										.intersection(filteredConsolidateRDD.keys)
+											.intersection(filteredFreedomRDD.keys)
+												.filter(word => word.length > 1)
+
+		filteredWords.saveAsTextFile(outputPath)
 	}
 }
