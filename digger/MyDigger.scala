@@ -104,6 +104,7 @@ object MyDigger {
 													.filter(word => word.length > 1)
 														.distinct
 
+
 		filteredWords.saveAsTextFile(outputPath)
 	}
 }
