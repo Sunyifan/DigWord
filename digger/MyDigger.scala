@@ -1,6 +1,7 @@
 package digger
 
 
+import lib.Searcher
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
 import util.{Calculator, TextProcessor}
@@ -60,14 +61,28 @@ object MyDigger {
 		// part-3:  不借助词表来计算自由熵
 		// 生成此前后缀
 		val wordPrefix = distWords.filter{(word : String) => word.length > 1}
-									.map((word : String) => (word.substring(1), word.charAt(0).toString))
-										.reduceByKey(_ + "|" + _ )
-											.map{case (word : String, prefixList : String) => (word, Calculator.freedom(prefixList))}
+										.map((word : String) => (word.substring(1), word.charAt(0).toString))
+											.filter{ item : (String, String) =>
+												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length) >= 0)
+													true
+												else
+													false
+											}
+												.reduceByKey(_ + "|" + _ )
+													.map{case (word : String, prefixList : String) => (word, Calculator.freedom(prefixList))}
 
 		val wordSuffix = distWords.filter{(word : String) => word.length > 1}
-									.map((word : String) => (word.substring(0,word.length - 1), word.charAt(word.length - 1).toString()))
-										.reduceByKey(_ + "|" + _ )
-											.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
+										.map((word : String) => (word.substring(0,word.length - 1), word.charAt(word.length - 1).toString()))
+											.filter{ item : (String, String) =>
+												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length) >= 0)
+													true
+												else
+													false
+											}
+												.reduceByKey(_ + "|" + _ )
+													.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
+
+
 
 		// 计算自由熵
 		val freedomRDD = wordPrefix.cogroup(wordSuffix).map { item =>
