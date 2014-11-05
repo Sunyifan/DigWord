@@ -56,7 +56,7 @@ object MyDigger {
 		val filteredConsolidateRDD = consolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
 
 
-		// part-3:  不借助词表来计算自由熵
+		// part-3:  过滤的到前后缀
 		// 生成此前后缀
 		val leftFreedomRDD = frequencyRDD.filter{
 													item : (String, Double) =>
