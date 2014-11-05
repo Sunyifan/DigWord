@@ -51,13 +51,15 @@ object MyDigger {
 
 		val extendedRDD = distLines.filter{line : String =>
 									Searcher.BinarySearch(line, dictionary, 0, dictionary.length)._1 >= 0
-								}
+								}.map{line : String => (line, Searcher.BinarySearch(line, dictionary, 0, dictionary.length)._2)}
 
 		// part-2:  计算凝结度并过滤
 		// 准备计算凝结度, 1. 生成词典并排序 2. 广播词典 3. 计算凝结度 4. 过滤
 		val consolidateRDD = filteredFrequencyRDD.map(line => Calculator.countDoc(line, textLength, dictionary))
-		val filteredConsolidateRDD = consolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
+		val extendedConsolidateRDD = extendedRDD.map(line => Calculator.countDoc(line, textLength, dictionary))
 
+		val filteredConsolidateRDD = consolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
+		val filteredExtendedConsolidateRDD = extendedConsolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
 
 		// part-3:  过滤的到前后缀
 		// 生成此前后缀
@@ -100,11 +102,14 @@ object MyDigger {
 		val filteredWords = filteredFrequencyRDD.keys
 										.intersection(filteredConsolidateRDD.keys)
 											.intersection(filteredFreedomRDD.keys)
-												.union(extendedRDD)
 													.filter(word => word.length > 1)
 														.distinct
 
+		val extendedWords = extendedRDD.keys
+										.intersection(filteredExtendedConsolidateRDD.keys)
+												.filter(word => word.length > 1)
+														.distinct
 
-		filteredWords.saveAsTextFile(outputPath)
+		filteredWords.union(extendedWords).saveAsTextFile(outputPath)
 	}
 }
