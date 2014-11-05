@@ -63,7 +63,7 @@ object MyDigger {
 		val wordPrefix = distWords.filter{(word : String) => word.length > 1}
 										.map((word : String) => (word.substring(1), word.charAt(0).toString))
 											.filter{ item : (String, String) =>
-												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length) >= 0)
+												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length)._1 >= 0)
 													true
 												else
 													false
@@ -74,7 +74,7 @@ object MyDigger {
 		val wordSuffix = distWords.filter{(word : String) => word.length > 1}
 										.map((word : String) => (word.substring(0,word.length - 1), word.charAt(word.length - 1).toString()))
 											.filter{ item : (String, String) =>
-												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length) >= 0)
+												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length)._1 >= 0)
 													true
 												else
 													false
