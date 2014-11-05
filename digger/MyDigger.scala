@@ -49,6 +49,9 @@ object MyDigger {
 		val dictionary = filteredFrequencyRDD.collect()
 		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 
+		val extendedRDD = distLines.filter{line : String =>
+									Searcher.BinarySearch(line, dictionary, 0, dictionary.length)._1 >= 0
+								}
 
 		// part-2:  计算凝结度并过滤
 		// 准备计算凝结度, 1. 生成词典并排序 2. 广播词典 3. 计算凝结度 4. 过滤
@@ -97,7 +100,9 @@ object MyDigger {
 		val filteredWords = filteredFrequencyRDD.keys
 										.intersection(filteredConsolidateRDD.keys)
 											.intersection(filteredFreedomRDD.keys)
-												.filter(word => word.length > 1)
+												.union(extendedRDD)
+													.filter(word => word.length > 1)
+														.distinct
 
 		filteredWords.saveAsTextFile(outputPath)
 	}
