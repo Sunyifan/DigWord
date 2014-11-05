@@ -46,46 +46,39 @@ object MyDigger {
 											.map{item : (String, Int) => (item._1, item._2.toDouble / textLength)}
 		val filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
 		filteredFrequencyRDD.persist()
-
+		val dictionary = filteredFrequencyRDD.collect()
+		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 
 
 		// part-2:  计算凝结度并过滤
 		// 准备计算凝结度, 1. 生成词典并排序 2. 广播词典 3. 计算凝结度 4. 过滤
-		val dictionary = filteredFrequencyRDD.collect()
-		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
-		val broadforwardDic = sc.broadcast(dictionary)
 		val consolidateRDD = filteredFrequencyRDD.map(line => Calculator.countDoc(line, textLength, dictionary))
 		val filteredConsolidateRDD = consolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
 
 
 		// part-3:  不借助词表来计算自由熵
 		// 生成此前后缀
-		val wordPrefix = distWords.filter{(word : String) => word.length > 1}
-										.map((word : String) => (word.substring(1), word.charAt(0).toString))
-											.filter{ item : (String, String) =>
-												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length)._1 >= 0)
-													true
-												else
-													false
-											}
-												.reduceByKey(_ + "|" + _ )
-													.map{case (word : String, prefixList : String) => (word, Calculator.freedom(prefixList))}
-
-		val wordSuffix = distWords.filter{(word : String) => word.length > 1}
-										.map((word : String) => (word.substring(0,word.length - 1), word.charAt(word.length - 1).toString()))
-											.filter{ item : (String, String) =>
-												if (Searcher.BinarySearch(item._1, dictionary, 0, dictionary.length)._1 >= 0)
-													true
-												else
-													false
-											}
-												.reduceByKey(_ + "|" + _ )
-													.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
+		val leftFreedomRDD = frequencyRDD.filter{
+													item : (String, Double) =>
+													item._1.length > 1 &&
+													Searcher.BinarySearch(item._1.substring(1), dictionary, 0, dictionary.length)._1 >=0
+												}
+												.map {item : (String, Double) => (item._1.substring(1), item._1.charAt(0).toString)}
+													.reduceByKey(_ + "|" + _)
+														.map{case (word : String, prefixList : String) => (word, Calculator.freedom(prefixList))}
 
 
+		val rightFreedomRDD = frequencyRDD.filter{
+													item : (String, Double) =>
+													item._1.length > 1 &&
+													Searcher.BinarySearch(item._1.substring(0, item._1.length - 2), dictionary, 0, dictionary.length)._1 >=0
+												}
+												.map {item : (String, Double) => (item._1.substring(0, item._1.length - 2), item._1.charAt(0).toString)}
+													.reduceByKey(_ + "|" + _)
+														.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
 
 		// 计算自由熵
-		val freedomRDD = wordPrefix.cogroup(wordSuffix).map { item =>
+		val freedomRDD = leftFreedomRDD.cogroup(rightFreedomRDD).map { item =>
 			val left = item._2._1.toArray;
 			val right = item._2._2.toArray;
 
