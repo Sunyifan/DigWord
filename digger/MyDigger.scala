@@ -21,7 +21,7 @@ object MyDigger {
 
 		val numPartitions = args(1).toInt
 		val inputPath = args(2)
-		val frequencyThreshold = args(3).toDouble
+		var frequencyThreshold = args(3).toDouble
 		val consolidateThreshold = args(4).toDouble
 		val freedomThreshold = args(5).toDouble
 		val maxWordLength = args(6).toInt
@@ -44,8 +44,16 @@ object MyDigger {
 		val frequencyRDD = distWords.map((word : String) => (word, 1))
 										.reduceByKey(_ + _)
 											.map{item : (String, Int) => (item._1, item._2.toDouble / textLength)}
-		val filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
+		var filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
+
+		while(filteredFrequencyRDD.count() < 1000){
+			frequencyThreshold = frequencyThreshold * 0.1
+			filteredFrequencyRDD = filteredFrequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
+		}
+
 		filteredFrequencyRDD.persist()
+
+
 		val dictionary = filteredFrequencyRDD.collect()
 		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 
@@ -78,7 +86,7 @@ object MyDigger {
 													item._1.length > 1 &&
 													Searcher.BinarySearch(item._1.substring(0, item._1.length - 2), dictionary, 0, dictionary.length)._1 >=0
 												}
-												.map {item : (String, Double) => (item._1.substring(0, item._1.length - 2), item._1.charAt(0).toString)}
+												.map {item : (String, Double) => (item._1.substring(0, item._1.length - 1), item._1.charAt(0).toString)}
 													.reduceByKey(_ + "|" + _)
 														.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
 
