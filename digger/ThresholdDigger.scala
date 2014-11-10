@@ -13,7 +13,7 @@ import scala.util.Sorting
  */
 object ThresholdDigger {
 	def dig(sc : SparkContext, inputRDD : RDD[(String, String)], frequencyThreshold : Double, consolidateThreshold : Double,
-									freedomThreshold : Double, maxWordLength : Int): Unit ={
+									freedomThreshold : Double, maxWordLength : Int): Array[String] ={
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
 		val distLines = inputRDD.flatMap{item : (String, String) => TextProcessor.preproccess(item._2)}
 		val textLength = distLines.map(line => line.length).reduce(_ + _)
@@ -102,6 +102,6 @@ object ThresholdDigger {
 					.filter(word => word.length > 1)
 						.distinct
 
-		val res = filteredWords.union(extendedWords).distinct.collect
+		filteredWords.union(extendedWords).distinct.collect
 	}
 }
