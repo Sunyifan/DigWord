@@ -23,6 +23,9 @@ object DigJobRunner {
 		val wordList = ThresholdDigger.dig(inputRDD)
 
 		// 词属性
-		val wordInAdCnt = WordAttrBuilder.wordInAdCount(inputRDD, wordList).take(5).foreach(println)
+		val wordInAdCnt = WordAttrBuilder.wordInAdCount(inputRDD, wordList)
+
+		// todo: store result
+
 	}
 }
