@@ -11,7 +11,7 @@ import environ.Env
  * Created by abzyme-baixing on 14-11-7.
  */
 object DataStorage {
-	def generateInputRDD(env : Env,  conf : Configuration): RDD[(String, String)] ={
+	def buildInputRDD(env : Env,  conf : Configuration): RDD[(String, String)] ={
 		find(env.getSparkContext(), conf.get("area_id"), conf.get("category"), conf.get("fromdate"), conf.get("todate"))
 			.map{item  => (item(0).toString, item(1).toString + " " + item(2).toString)}
 	}
