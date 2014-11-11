@@ -14,6 +14,6 @@ object DigJobRunner {
 		val env = new Env(conf)
 
 		val inputRDD = DataStorage.generateInputRDD(env, conf)
-		inputRDD.take(5).foreach(println)
+
 	}
 }
