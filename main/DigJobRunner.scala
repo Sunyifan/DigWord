@@ -1,6 +1,7 @@
 package main
 
 import config.Configuration
+import digger.ThresholdDigger
 import environ.Env
 import util.DataStorage
 
@@ -14,6 +15,7 @@ object DigJobRunner {
 		val env = new Env(conf)
 
 		val inputRDD = DataStorage.generateInputRDD(env, conf)
-
+		val wordList = ThresholdDigger.dig(inputRDD)
+		wordList.foreach(println)
 	}
 }
