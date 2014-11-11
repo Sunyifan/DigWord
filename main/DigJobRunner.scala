@@ -32,6 +32,5 @@ object DigJobRunner {
 		val wordInAdCnt = WordAttrBuilder.wordInAdCount(inputRDD, wordList)
 
 		// todo: store result
-
 	}
 }
