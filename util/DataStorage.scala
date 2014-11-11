@@ -16,14 +16,14 @@ object DataStorage {
 			.map{item  => (item(0).toString, item(1).toString + " " + item(2).toString)}
 	}
 
-	def find(sc : SparkContext,  category : String, areaid : String, fromdate : String, todate : String) : SchemaRDD = {
+	def find(sc : SparkContext, areaid : String, category : String, fromdate : String, todate : String) : SchemaRDD = {
 		val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
 
-		hiveContext.hql(getQuery(category, areaid, fromdate, todate))
+		hiveContext.hql(getQuery(areaid, category, fromdate, todate))
 	}
 
-	def getQuery(category : String, areaid : String, fromdate : String, todate: String): String ={
-		" SELECT adId, title, content"  +
+	def getQuery(areaid : String, category : String, fromdate : String, todate: String): String ={
+		" SELECT ad_id, title, content"  +
 		" FROM shots.ad_content " +
 		" WHERE category = '" + category + "' and " +
 				"area_id = '" + areaid + "' and " +
