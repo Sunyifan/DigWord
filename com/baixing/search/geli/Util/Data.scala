@@ -11,10 +11,10 @@ import org.apache.spark.sql.SchemaRDD
  */
 object Data {
 	def AdInputRDD(conf : Configuration, env : Env) : RDD[(String,String)] = {
-		Ad(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
+		RawAd(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
 	}
 
-	private def Ad (conf : Configuration, env : Env) : SchemaRDD = {
+	private def RawAd (conf : Configuration, env : Env) : SchemaRDD = {
 		env.hiveContext().hql(AdQuery(conf))
 	}
 
