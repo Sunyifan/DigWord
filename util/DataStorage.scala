@@ -16,24 +16,10 @@ object DataStorage {
 			.map{item  => (item(0).toString, item(1).toString + " " + item(2).toString)}
 	}
 
-	def insertWordInAdRDD(wordInAdIdRDD : RDD[(String, String)], env : Env, conf : Configuration) : Unit = {
-		for (word <- wordInAdIdRDD.collect){
-			insert(env.getSparkContext(), word._1, word._2, conf.get("area_id"), conf.get("category"),
-				conf.get("fromdate"), conf.get("todate"))
-		}
-	}
-
 	def find(sc : SparkContext, areaid : String, category : String, fromdate : String, todate : String) : SchemaRDD = {
 		val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
 
 		hiveContext.hql(getQuery(areaid, category, fromdate, todate))
-	}
-
-	def insert(sc : SparkContext, word : String, adIds : String, area_id : String, category : String,
-		                    fromdate : String, todate : String, source : String = "Ad"): SchemaRDD ={
-		val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
-
-		hiveContext.hql(insertQuery(word, adIds, area_id, category, fromdate, todate, source))
 	}
 
 	def getQuery(areaid : String, category : String, fromdate : String, todate: String): String ={
