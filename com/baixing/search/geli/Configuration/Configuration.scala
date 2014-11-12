@@ -17,8 +17,13 @@ class Configuration {
 		this.set("mergeDate", mergeDate.toString)
 	}
 
-	def get(prop : String): String = properties(prop)
-	def set(prop : String, value : String) : Unit = properties += (prop -> value)
+	private def get(prop : String): String = properties(prop)
+	private def set(prop : String, value : String) : Unit = properties += (prop -> value)
+	def areaId() : String = get("area_id")
+	def category() : String = get("category")
+	def fromdate() : String = get("fromdate")
+	def todate() : String = get("todate")
+
 	override def toString() = properties("area_id") + "_" + properties("category") +
 		"_" + properties("fromdate") + "_" + properties("todate")
 
