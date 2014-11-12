@@ -9,16 +9,16 @@ import org.apache.spark.sql.SchemaRDD
 /**
  * Created by abzyme-baixing on 14-11-12.
  */
-object DataUtil {
+object Data {
 	def AdInputRDD(conf : Configuration, env : Env) : RDD[(String,String)] = {
-		getAd(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
+		Ad(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
 	}
 
-	private def getAd (conf : Configuration, env : Env) : SchemaRDD = {
-		env.hiveContext().hql(buildAdQuery(conf))
+	private def Ad (conf : Configuration, env : Env) : SchemaRDD = {
+		env.hiveContext().hql(AdQuery(conf))
 	}
 
-	private def buildAdQuery (conf : Configuration) : String = {
+	private def AdQuery (conf : Configuration) : String = {
 		val category = conf.category
 		val areaid = conf.areaId
 		val fromdate = conf.fromdate
