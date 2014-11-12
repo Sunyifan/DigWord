@@ -61,4 +61,20 @@ object Text {
 			ret = true
 		ret
 	}
+
+	def splitWord(v: String, wordLength: Int ):ArrayBuffer[String] = {
+		val len = v.length
+		//textLength += len
+		val greetStrings =  ArrayBuffer[String]()
+		for (i <- 0 to len - 1) {
+			// 单词起始点位置
+			var j: Int = 1 // 新词长度
+			while (i + j <= len && j <= wordLength) {
+				val tmp: String = v.substring(i, i + j)
+				greetStrings += tmp
+				j += 1
+			}
+		}
+		greetStrings
+	}
 }
