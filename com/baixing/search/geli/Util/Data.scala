@@ -10,7 +10,8 @@ import org.apache.spark.sql.SchemaRDD
  * Created by abzyme-baixing on 14-11-12.
  */
 object Data {
-	def AdInputRDD(conf : Configuration, env : Env) : RDD[(String,String)] = {
+	// get ad
+	def AdInput(conf : Configuration, env : Env) : RDD[(String,String)] = {
 		RawAd(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
 	}
 
@@ -24,15 +25,20 @@ object Data {
 		val fromdate = conf.fromdate
 		val todate = conf.todate
 
-		" SELECT ad_id, title, content"  +
-			" FROM shots.ad_content " +
-			" WHERE category = '" + category + "' and " +
-			"area_id = '" + areaid + "' and " +
-			"dt < '" + todate + "' and " +
-			"dt >= '" + fromdate + "'"
+		"\nSELECT\n" +
+		"    ad_id,\n " +
+		"    title,\n" +
+		"    content\n"  +
+		"FROM\n" +
+		"    shots.ad_content\n" +
+		"WHERE\n" +
+		"    category = '" + category + "'\n" +
+		"    and area_id = '" + areaid + "'\n" +
+		"    and dt between " + fromdate + " and " + todate
 	}
 
 
+	// get user action data
 	def UserActionInputRDD(conf : Configuration, env : Env) : RDD[(String, (String, String))] = {
 		UserAction(conf, env).map{ row =>
 			val visitor_id = row(0).toString
@@ -54,7 +60,7 @@ object Data {
 		val todate = conf.todate
 
 
-		"SELECT\n" +
+		"\nSELECT\n" +
 		"    visitor_id,\n" +
 		"    referer['query'] as query,\n" +
 		"    landing['ad_id'] as ad_id\n" +
@@ -69,8 +75,12 @@ object Data {
 		"    and referer['city_id'] = '" + areaid + "'\n" +
 		"    and landing['city_id'] = '" + areaid + "'\n" +
 		"    and landing['url_type'] = 4\n" +
-		"    and landing['category_name_en'] = '" + category+ "'\n" +
 		"    and (platform = 'wap' or platform = 'web')\n"
 	}
 
+
+	// get chuanzhu word
+	def ChuanzhuWord(filename : String, env : Env): Array[String] ={
+		env.sparkContext().textFile(filename).collect
+	}
 }
