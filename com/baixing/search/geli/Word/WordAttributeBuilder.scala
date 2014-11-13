@@ -23,4 +23,19 @@ object WordAttributeBuilder {
 				res.distinct
 		}.reduceByKey(_ + "|" + _)
 	}
+
+	def wordRelations(wordRDD1 : RDD[(String, String)], wordRDD2: RDD[(String, String)]): RDD[((String, String), Double)] ={
+		wordRDD1.cartesian(wordRDD2).map{
+			line : ((String, String), (String, String)) =>
+				val geli = line._1._1
+				val chuanzhu = line._2._1
+				val geliAdIds = line._1._2.split("\\|")
+				val chuanzhuAdIds = line._2._2.split("\\|")
+
+				val commonIds = geliAdIds ++ chuanzhuAdIds
+
+				((geli, chuanzhu),
+					(geliAdIds.length + chuanzhuAdIds.length - commonIds.distinct.length) / geliAdIds.length.toDouble)
+		}
+	}
 }
