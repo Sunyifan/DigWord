@@ -11,7 +11,7 @@ import scala.util.Sorting
  * Created by abzyme-baixing on 14-11-12.
  */
 object ThresholdDigger {
-	def dig(inputRDD : RDD[(String, String)], frequencyThreshold : Double = 0.00005, consolidateThreshold : Double = 1.1,
+	def dig(inputRDD : RDD[(String, String)], frequencyThreshold : Double = 0.0001, consolidateThreshold : Double = 1.1,
 	        freedomThreshold : Double = 1.1, maxWordLength : Int = 10): Array[String] = {
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
 		val distLines = inputRDD.flatMap{item : (String, String) => TextProcessor.preproccess(item._2)}
@@ -26,14 +26,7 @@ object ThresholdDigger {
 		val frequencyRDD = distWords.map((word : String) => (word, 1))
 			.reduceByKey(_ + _)
 			.map{item : (String, Int) => (item._1, item._2.toDouble / textLength)}
-		var filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
-
-		var freqThres = frequencyThreshold
-		while(filteredFrequencyRDD.count() < 1000){
-			freqThres = freqThres * 0.1
-			filteredFrequencyRDD = filteredFrequencyRDD.filter{item : (String, Double) => item._2 > freqThres}
-		}
-
+		val filteredFrequencyRDD = frequencyRDD.filter{item : (String, Double) => item._2 > frequencyThreshold}
 		filteredFrequencyRDD.persist()
 
 
