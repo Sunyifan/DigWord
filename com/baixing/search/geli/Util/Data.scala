@@ -4,6 +4,9 @@ import com.baixing.search.geli.Configuration.Configuration
 import com.baixing.search.geli.Environment.Env
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.SparkContext._
+
+import scala.collection.mutable.ArrayBuffer
 
 
 /**
@@ -62,25 +65,37 @@ object Data {
 
 		"\nSELECT\n" +
 		"    visitor_id,\n" +
-		"    referer['query'] as query,\n" +
+		"    referer,\n" +
 		"    landing['ad_id'] as ad_id\n" +
 		"FROM\n" +
 		"    base.user_actions\n" +
 		"WHERE\n" +
 		"    dt between " + fromdate + " and " + todate + "\n" +
-		"    and referer['query'] like '%query%'\n" +
-		"    and referer['query'] is not null\n" +
-		"    and referer['query'] <> ''\n" +
 		"    and referer['url'] not like '%select%'\n" +
-		"    and referer['city_id'] = '" + areaid + "'\n" +
+		"    and landing['ad_id'] <> 0\n" +
 		"    and landing['city_id'] = '" + areaid + "'\n" +
+		"    and landing['category_name_en'] = '" + category + "'\n" +
 		"    and landing['url_type'] = 4\n" +
 		"    and (platform = 'wap' or platform = 'web')\n"
 	}
 
 
-	// get chuanzhu word
-	def ChuanzhuWord(filename : String, env : Env): Array[String] ={
-		env.sparkContext().textFile(filename).collect
+	// get tag
+	def adTagInputRDD(conf : Configuration, env : Env) : RDD[(String, String)] = {
+		adTag(conf, env).map{
+			row =>
+				(row(0).toString, row(1).toString)
+		}
+	}
+
+	def adTag(conf : Configuration, env : Env): SchemaRDD = {
+		env.hiveContext().hql(adTagQuery())
+	}
+
+	def adTagQuery(): String ={
+		"\nSELECT\n" +
+		"    *\n" +
+		"FROM\n" +
+		"   logs.ad_tag"
 	}
 }
