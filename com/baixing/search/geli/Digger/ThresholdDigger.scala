@@ -12,15 +12,13 @@ import scala.util.Sorting
  */
 object ThresholdDigger {
 	def dig(inputRDD : RDD[(String, String)], frequencyThreshold : Double = 0.0001, consolidateThreshold : Double = 100,
-	        freedomThreshold : Double = 1.1, maxWordLength : Int = 10): Array[String] = {
+	        freedomThreshold : Double = 0.9, maxWordLength : Int = 10): Array[String] = {
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
 		val distLines = inputRDD.flatMap{item : (String, String) => TextProcessor.preproccess(item._2)}
 		val textLength = distLines.map(line => line.length).reduce(_ + _)
 
 		// 生成词表
 		val distWords = distLines.flatMap(line => TextProcessor.splitWord(line, maxWordLength))
-
-
 
 		// part-1:  计算词频并过滤
 		val frequencyRDD = distWords.map((word : String) => (word, 1))
@@ -31,6 +29,7 @@ object ThresholdDigger {
 
 
 		val dictionary = filteredFrequencyRDD.collect()
+
 		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 
 		val extendedRDD = distLines.filter{line : String =>
@@ -45,8 +44,7 @@ object ThresholdDigger {
 		val filteredConsolidateRDD = consolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
 		val filteredExtendedConsolidateRDD = extendedConsolidateRDD.filter{item : (String, Double) => item._2 > consolidateThreshold}
 
-		// part-3:  过滤的到前后缀
-		// 生成此前后缀
+		// part-3:  过滤得到前后缀，计算自由熵
 		val leftFreedomRDD = frequencyRDD.filter{
 			item : (String, Double) =>
 				item._1.length > 1 &&

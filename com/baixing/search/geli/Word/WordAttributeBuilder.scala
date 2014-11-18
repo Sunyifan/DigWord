@@ -9,7 +9,19 @@ import scala.collection.mutable.ArrayBuffer
  * Created by abzyme-baixing on 14-11-12.
  */
 object WordAttributeBuilder {
-	def word2Ad(inputRDD : RDD[(String, String)], wordList : Array[String]): RDD[(String, String)] = {
+	def pearl2Ad(inputRDD : RDD[(String, String)]): RDD[(String, Array[String])] ={
+		inputRDD.flatMap{
+			item =>
+				val ret = new ArrayBuffer[(String, String)]
+
+				for (word <- item._2.split("@")){
+					ret += ((word, item._1))
+				}
+
+				ret
+		}.groupByKey().map{item => (item._1, item._2.toArray)}
+	}
+	def word2Ad(inputRDD : RDD[(String, String)], wordList : Array[String]): RDD[(String, Array[String])] = {
 		inputRDD.flatMap{
 			item : (String, String)=>
 
@@ -21,21 +33,21 @@ object WordAttributeBuilder {
 				}
 
 				res.distinct
-		}.reduceByKey(_ + "|" + _)
+		}.groupByKey().map{item => (item._1, item._2.toArray)}
 	}
 
-	def wordRelations(wordRDD1 : RDD[(String, String)], wordRDD2: RDD[(String, String)]): RDD[((String, String), Double)] ={
-		wordRDD1.cartesian(wordRDD2).map{
-			line : ((String, String), (String, String)) =>
-				val geli = line._1._1
-				val chuanzhu = line._2._1
-				val geliAdIds = line._1._2.split("\\|")
-				val chuanzhuAdIds = line._2._2.split("\\|")
+	def wordRelations(wordRDD1 : RDD[(String, Array[String])], wordRDD2: RDD[(String, Array[String])]): RDD[((String, String), Double)] ={
+		wordRDD2.cartesian(wordRDD1).map{
+			line  =>
+				val chuanzhu = line._1._1
+				val geli = line._2._1
+				val chuanzhuAdIds = line._1._2
+				val geliAdIds = line._2._2
 
 				val commonIds = geliAdIds ++ chuanzhuAdIds
 
-				((geli, chuanzhu),
+				((chuanzhu, geli),
 					(geliAdIds.length + chuanzhuAdIds.length - commonIds.distinct.length) / geliAdIds.length.toDouble)
-		}
+		}.filter{item : ((String, String), Double) => item._2 > 0.05}
 	}
 }
