@@ -9,8 +9,12 @@ import scala.collection.mutable.ArrayBuffer
  * Created by abzyme-baixing on 14-11-12.
  */
 object WordAttributeBuilder {
-	def pearl2Ad(inputRDD : RDD[(String, String)]): RDD[(String, Array[String])] ={
-		inputRDD.flatMap{
+	def pearl2Ad(adTags : RDD[(String, String)], ads:RDD[(String, String)]): RDD[(String, Array[String])] ={
+
+		ads.join(adTags).map{
+			item : (String, (String, String))
+			=> (item._1, item._2._2)
+		}.flatMap{
 			item =>
 				val ret = new ArrayBuffer[(String, String)]
 
@@ -21,6 +25,7 @@ object WordAttributeBuilder {
 				ret
 		}.groupByKey().map{item => (item._1, item._2.toArray)}
 	}
+
 	def word2Ad(inputRDD : RDD[(String, String)], wordList : Array[String]): RDD[(String, Array[String])] = {
 		inputRDD.flatMap{
 			item : (String, String)=>
@@ -36,6 +41,18 @@ object WordAttributeBuilder {
 		}.groupByKey().map{item => (item._1, item._2.toArray)}
 	}
 
+	def word2Query(queryRDD : RDD[(String, String)], wordList : Array[String]): Unit = {
+		queryRDD.map{
+			item : (String, String) =>
+				val res = new ArrayBuffer[(String, String)]()
+				for (word <- wordList){
+					if (item._2.indexOf(word) >= 0){
+						res += ((item._1, item._1))
+					}
+				}
+		}
+	}
+
 	def wordRelations(wordRDD1 : RDD[(String, Array[String])], wordRDD2: RDD[(String, Array[String])]): RDD[((String, String), Double)] ={
 		wordRDD2.cartesian(wordRDD1).map{
 			line  =>
@@ -48,6 +65,6 @@ object WordAttributeBuilder {
 
 				((chuanzhu, geli),
 					(geliAdIds.length + chuanzhuAdIds.length - commonIds.distinct.length) / geliAdIds.length.toDouble)
-		}.filter{item : ((String, String), Double) => item._2 > 0.05}
+		}.filter{item : ((String, String), Double) => item._2 > 0.05 && item._2 < 1 }
 	}
 }

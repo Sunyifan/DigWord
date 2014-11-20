@@ -61,8 +61,8 @@ object ThresholdDigger {
 					Searcher.BinarySearch(item._1.substring(0, item._1.length - 2), dictionary, 0, dictionary.length)._1 >=0
 		}
 			.map {item : (String, Double) => (item._1.substring(0, item._1.length - 1), item._1.charAt(0).toString)}
-			.reduceByKey(_ + "|" + _)
-			.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
+				.reduceByKey(_ + "|" + _)
+					.map{case (word : String, suffixList : String) => (word, Calculator.freedom(suffixList))}
 
 		// 计算自由熵
 		val freedomRDD = leftFreedomRDD.cogroup(rightFreedomRDD).map { item =>
@@ -82,15 +82,16 @@ object ThresholdDigger {
 
 		// 计算过滤后存在的词
 		val filteredWords = filteredFrequencyRDD.keys
-			.intersection(filteredConsolidateRDD.keys)
-			.intersection(filteredFreedomRDD.keys)
-			.filter(word => word.length > 1)
-			.distinct
+				.intersection(filteredConsolidateRDD.keys)
+					.intersection(filteredFreedomRDD.keys)
+						.filter(word => word.length > 1)
+							.distinct
 
 		val extendedWords = extendedRDD.keys
-			.intersection(filteredExtendedConsolidateRDD.keys)
-			.filter(word => word.length > 1)
-			.distinct
+				.intersection(filteredExtendedConsolidateRDD.keys)
+					.filter(word => word.length > 1)
+						.distinct
+
 
 		filteredWords.union(extendedWords).collect
 	}
