@@ -12,5 +12,4 @@ class Env (conf : Configuration){
 	private val hc : HiveContext = new HiveContext(sc)
 	def sparkContext() : SparkContext = sc
 	def hiveContext() : HiveContext = hc
-	def broadcast(item : AnyRef) : Unit = sc.broadcast(item)
 }
