@@ -1,7 +1,7 @@
-package util
+package com.baixing.search.geli.Util
 
-import lib.Searcher
 import scala.collection.mutable.Map
+
 /**
  * Created by abzyme-baixing on 14-11-4.
  */
@@ -13,10 +13,11 @@ object Calculator {
 		for (num <- 1 to word._1.length-1){
 			val Lword = word._1.substring(0, num)
 			val Rword = word._1.substring(num)
-			val searchDicLword = Searcher.BinarySearch(Lword, dictionary, 0, len)
-			val searchDicRword = Searcher.BinarySearch(Rword, dictionary, 0, len)
-			if( searchDicLword._1 != -1 && searchDicRword._1 != -1){
-				doc = math.min(doc, word._2.toDouble * TextLen /searchDicLword._2.toDouble/ searchDicRword._2.toDouble)
+			val searchDicLwordIndex = Text.binSearch(dictionary.map(_._1), Lword)
+			val searchDicRwordIndex = Text.binSearch(dictionary.map(_._1), Rword)
+			if( searchDicLwordIndex >= 0 && searchDicRwordIndex >= 0){
+				doc = math.min(doc, word._2.toDouble * TextLen /
+					(dictionary(searchDicLwordIndex)._2.toDouble * dictionary(searchDicRwordIndex)._2.toDouble))
 			}
 		}
 

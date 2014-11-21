@@ -1,10 +1,10 @@
 package com.baixing.search.geli.Digger
 
-import lib.Searcher
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
-import util.{Calculator, TextProcessor}
 
+import com.baixing.search.geli.Util.Calculator
+import com.baixing.search.geli.Util.Text
 import scala.util.Sorting
 
 /**
@@ -14,11 +14,11 @@ object ThresholdDigger {
 	def dig(inputRDD : RDD[(String, String)], frequencyThreshold : Double = 0.0001, consolidateThreshold : Double = 100,
 	        freedomThreshold : Double = 0.9, maxWordLength : Int = 10): Array[String] = {
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
-		val distLines = inputRDD.flatMap{item : (String, String) => TextProcessor.preproccess(item._2)}
+		val distLines = inputRDD.flatMap{item : (String, String) => Text.preproccess(item._2)}
 		val textLength = distLines.map(line => line.length).reduce(_ + _)
 
 		// 生成词表
-		val distWords = distLines.flatMap(line => TextProcessor.splitWord(line, maxWordLength))
+		val distWords = distLines.flatMap(line => Text.splitWord(line, maxWordLength))
 
 		// part-1:  计算词频并过滤
 		val frequencyRDD = distWords.map((word : String) => (word, 1))
@@ -33,8 +33,11 @@ object ThresholdDigger {
 		Sorting.quickSort(dictionary)(Ordering.by[(String, Double), String](_._1))
 
 		val extendedRDD = distLines.filter{line : String =>
-			Searcher.BinarySearch(line, dictionary, 0, dictionary.length)._1 >= 0
-		}.map{line : String => (line, Searcher.BinarySearch(line, dictionary, 0, dictionary.length)._2)}
+			Text.binSearch(dictionary.map(_._1), line) >= 0
+		}.map{line : String =>
+			val index = Text.binSearch(dictionary.map(_._1), line)
+			(line, dictionary(index)._2)
+		}
 
 		// part-2:  计算凝结度并过滤
 		// 准备计算凝结度, 1. 生成词典并排序 2. 广播词典 3. 计算凝结度 4. 过滤
@@ -48,7 +51,7 @@ object ThresholdDigger {
 		val leftFreedomRDD = frequencyRDD.filter{
 			item : (String, Double) =>
 				item._1.length > 1 &&
-					Searcher.BinarySearch(item._1.substring(1), dictionary, 0, dictionary.length)._1 >=0
+					Text.binSearch(dictionary.map(_._1), item._1.substring(1)) >= 0
 		}
 			.map {item : (String, Double) => (item._1.substring(1), item._1.charAt(0).toString)}
 			.reduceByKey(_ + "|" + _)
@@ -58,7 +61,7 @@ object ThresholdDigger {
 		val rightFreedomRDD = frequencyRDD.filter{
 			item : (String, Double) =>
 				item._1.length > 1 &&
-					Searcher.BinarySearch(item._1.substring(0, item._1.length - 2), dictionary, 0, dictionary.length)._1 >=0
+					Text.binSearch(dictionary.map(_._1), item._1.substring(0, item._1.length - 2)) >= 0
 		}
 			.map {item : (String, Double) => (item._1.substring(0, item._1.length - 1), item._1.charAt(0).toString)}
 				.reduceByKey(_ + "|" + _)

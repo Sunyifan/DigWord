@@ -77,4 +77,9 @@ object Text {
 		}
 		greetStrings
 	}
+
+
+	def binSearch(arr : Array[String], item : String): Int ={
+		java.util.Arrays.binarySearch(arr.asInstanceOf[Array[AnyRef]], item)
+	}
 }

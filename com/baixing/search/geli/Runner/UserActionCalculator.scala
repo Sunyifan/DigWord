@@ -13,7 +13,7 @@ import scala.collection.mutable.ArrayBuffer
  * Created by abzyme-baixing on 14-11-19.
  */
 object UserActionCalculator {
-	def pearlUV(conf : Configuration, env : Env): RDD[(String, Int)] ={
+	def pearlUV(conf : Configuration, env : Env): RDD[(String, Int)] = {
 		val ad2Visitor = Data.ad2VisitorInputRDD(conf, env)
 		val adTags = Data.adTagInputRDD(conf, env)
 		val pearlUV = ad2Visitor.join(adTags).flatMap{
@@ -39,7 +39,7 @@ object UserActionCalculator {
 		val geliInQuery = ThresholdDigger.dig(query)
 											.filter{item : String =>
 												for (tag <- allTags) {
-													if (tag == item)
+													if (tag.toLowerCase == item.toLowerCase)
 														false
 												}
 
