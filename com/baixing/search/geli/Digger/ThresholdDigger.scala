@@ -11,6 +11,19 @@ import scala.util.Sorting
  * Created by abzyme-baixing on 14-11-12.
  */
 object ThresholdDigger {
+	def textLength(text : RDD[String]) : Long = text.map(_.length).reduce(_ + _)
+	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
+	def words(text : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+		text.flatMap{line : String => Text.splitWord(line, maxWordLength)}
+	}
+	def frequency(words : RDD[String], textLength : Long) : Array[(String, Double)] = {
+		words.map((word : String) => (word, 1))
+							.reduceByKey(_ + _)
+								.map{item : (String, Int) => (item._1, item._2.toDouble / textLength)}
+									.sortByKey()
+										.collect
+	}
+
 	def dig(inputRDD : RDD[(String, String)], frequencyThreshold : Double = 0.0001, consolidateThreshold : Double = 100,
 	        freedomThreshold : Double = 0.9, maxWordLength : Int = 10): Array[String] = {
 		// 预处理文本: 1. 去除特殊的转义符号 2. 把全文切分成短句 3. 计算总文本长度
