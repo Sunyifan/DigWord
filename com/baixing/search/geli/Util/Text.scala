@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
  * Created by abzyme-baixing on 14-11-12.
  */
 object Text {
-	private val reserveChar = Array('*', '-', 'X', '.','\\')
+	private val reserveChar = Array('*', '-', 'X', '.','\\', '/')
 	private val stopString = Array("\\r", "\\n")
 
 	private def isValidChar(c : Character): Boolean ={
@@ -24,7 +24,6 @@ object Text {
 
 	def preproccess(content: String): ArrayBuffer[String] = {
 		val ret = ArrayBuffer[String]()
-
 		var start, end = 0
 
 		while(start != content.length){
