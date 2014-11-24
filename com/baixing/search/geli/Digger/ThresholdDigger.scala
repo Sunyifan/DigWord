@@ -13,8 +13,8 @@ object ThresholdDigger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
 
-	def words(text : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
-		text.flatMap{line : String => Text.splitWord(line, maxWordLength)}
+	def words(rawText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+		processedText(rawText).flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
 	def frequency(words : RDD[String], textLength : Long) : Array[(String, Double)] = {
@@ -26,25 +26,26 @@ object ThresholdDigger {
 	}
 
 	def consolidate(words : RDD[(String)], dictionary : Array[(String, Double)]) : Array[(String, Double)] = {
-		words.map{word : String =>
-			var consolidate = Double.MaxValue
-			val words = dictionary.map(_._1)
-			val wordIndex = Text.find(words, word)
+		words.filter(_.length > 1)
+				.map{word : String =>
+					var consolidate = Double.MaxValue
+					val words = dictionary.map(_._1)
+					val wordIndex = Text.find(words, word)
 
-			for (num <- 1 to word.length - 1){
-				val leftWord = word.substring(0, num)
-				val rightWord = word.substring(num)
+					for (num <- 1 to word.length - 1){
+						val leftWord = word.substring(0, num)
+						val rightWord = word.substring(num)
 
-				val leftWordIndex = Text.find(words, leftWord)
-				val rightWordIndex = Text.find(words, rightWord)
-				if( leftWordIndex >= 0 && rightWordIndex >= 0 ){
-					consolidate = math.min(consolidate, dictionary(wordIndex)._2  /
-						(dictionary(leftWordIndex)._2 * dictionary(rightWordIndex)._2))
-				}
-			}
+						val leftWordIndex = Text.find(words, leftWord)
+						val rightWordIndex = Text.find(words, rightWord)
+						if( leftWordIndex >= 0 && rightWordIndex >= 0 ){
+							consolidate = math.min(consolidate, dictionary(wordIndex)._2  /
+									(dictionary(leftWordIndex)._2 * dictionary(rightWordIndex)._2))
+						}
+					}
 
-			(word, consolidate)
-		}.collect
+					(word, consolidate)
+				}.collect
 	}
 
 	def freedom(words : RDD[String]): Array[(String, Double)] ={
