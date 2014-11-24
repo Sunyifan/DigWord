@@ -1,6 +1,7 @@
 package com.baixing.search.geli.Util
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Map
 
 /**
  * Created by abzyme-baixing on 14-11-12.
@@ -69,7 +70,7 @@ object Text {
 
 	def entrophy(charArray : Array[Char]): Double ={
 		val len = charArray.length.toDouble
-		var charCnt = Map[Char, Int]()
+		val charCnt = Map[Char, Int]()
 		var ret : Double = 0.0
 
 		for (c <- charArray){
