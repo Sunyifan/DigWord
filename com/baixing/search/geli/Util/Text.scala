@@ -77,7 +77,7 @@ object Text {
 			if (!charCnt.contains(c))
 				charCnt += (c -> 0)
 
-			charCnt.updated(c, charCnt(c) + 1)
+			charCnt(c) += 1
 		}
 
 		for((k, v) <- charCnt){
