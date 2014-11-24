@@ -17,15 +17,14 @@ object ThresholdDigger {
 		processedText(rawText).flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
-	def frequency(words : RDD[String], textLength : Long) : Array[(String, Double)] = {
+	def frequency(words : RDD[String], textLength : Long) : RDD[(String, Double)] = {
 		words.map((word : String) => (word, 1))
 				.reduceByKey(_ + _)
 					.map{item : (String, Int) => (item._1, item._2.toDouble / (textLength - item._1.length + 1))}
 						.sortByKey()
-							.collect
 	}
 
-	def consolidate(words : RDD[(String)], dictionary : Array[(String, Double)]) : Array[(String, Double)] = {
+	def consolidate(words : RDD[String], dictionary : Array[(String, Double)]) : RDD[(String, Double)] = {
 		words.filter(_.length > 1)
 				.map{word : String =>
 					var consolidate = Double.MaxValue
@@ -45,10 +44,10 @@ object ThresholdDigger {
 					}
 
 					(word, consolidate)
-				}.collect
+				}
 	}
 
-	def freedom(words : RDD[String]): Array[(String, Double)] ={
+	def freedom(words : RDD[String]): RDD[(String, Double)] ={
 		val leftFreedom = words.filter(_.length > 1)
 									.map{word : String => (word.substring(1, word.length), word.charAt(0))}
 										.groupByKey
@@ -70,7 +69,34 @@ object ThresholdDigger {
 								else
 									(item._1, arr2(0))
 
-						}.collect
+						}
 	}
 
+	def dig(rawText : RDD[String], percentage : Double = 0.5): RDD[(String, (Double, Double, Double))] ={
+		val len = textLength(rawText)
+		val word = words(rawText)
+
+		val freq = frequency(word, len)
+		val freqThres = threshold(freq.map(_._2).collect, percentage)
+		val filteredFreq = freq.filter(_._2 > freqThres)
+
+		val consol = consolidate(filteredFreq.keys, filteredFreq.collect)
+		val consolThres = threshold(consol.map(_._2).collect, percentage)
+		val filteredConsol = consol.filter(_._2 > consolThres)
+
+		val free = freedom(filteredFreq.keys)
+		val freeThres = threshold(free.map(_._2).collect, percentage)
+		val filteredFree = free.filter(_._2 > freeThres)
+
+		filteredFreq.join(filteredConsol)
+				.join(filteredFree)
+					.map{
+						item : (String, ((Double, Double), Double)) =>
+							(item._1, (item._2._1._1, item._2._1._2, item._2._2))
+					}
+	}
+
+	def threshold(arr : Array[Double], percentage : Double) : Double = {
+		arr.sortWith(_ > _)((arr.length * percentage).toInt)
+	}
 }
