@@ -10,8 +10,8 @@ import org.apache.spark.sql.SchemaRDD
  */
 object Data {
 	// get ad
-	def adInput(conf : Configuration, env : Env) : RDD[(String,String)] = {
-		RawAd(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
+	def adInput(conf : Configuration, env : Env) : RDD[String] = {
+		RawAd(conf, env).map{ row => row(1).toString + " " + row(2).toString}
 	}
 
 	private def RawAd (conf : Configuration, env : Env) : SchemaRDD = {
