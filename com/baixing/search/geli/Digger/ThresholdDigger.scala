@@ -47,15 +47,15 @@ object ThresholdDigger {
 		}.collect
 	}
 
-	def freedom(words : RDD[String]): Unit ={
+	def freedom(words : RDD[String]): Array[(String, Double)] ={
 		val leftFreedom = words.filter(_.length > 1)
 									.map{word : String => (word.substring(1, word.length), word.charAt(0))}
 										.groupByKey
-											.map{ item : (String, Iterable[Char]) => (item._1, entrophy(item._2.toArray))}
+											.map{ item : (String, Iterable[Char]) => (item._1, Text.entrophy(item._2.toArray))}
 		val rightFreedom = words.filter(_.length > 1)
 									.map{word : String => (word.substring(0, word.length - 1), word.charAt(word.length - 1))}
 										.groupByKey
-											.map{ item : (String, Iterable[Char]) => (item._1, entrophy(item._2.toArray))}
+											.map{ item : (String, Iterable[Char]) => (item._1, Text.entrophy(item._2.toArray))}
 
 		leftFreedom.cogroup(rightFreedom)
 						.map{
@@ -69,25 +69,7 @@ object ThresholdDigger {
 								else
 									(item._1, arr2(0))
 
-						}
+						}.collect
 	}
 
-	def entrophy(charArray : Array[Char]): Double ={
-		val len = charArray.length.toDouble
-		var charCnt = Map[Char, Int]()
-		var ret : Double = 0.0
-
-		for (c <- charArray){
-			if (!charCnt.contains(c))
-				charCnt += (c -> 0)
-
-			charCnt.updated(c, charCnt(c) + 1)
-		}
-
-		for((k, v) <- charCnt){
-			ret = ret - v.toDouble / len * Math.log(v.toDouble / len)
-		}
-
-		ret
-	}
 }

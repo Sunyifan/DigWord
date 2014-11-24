@@ -65,4 +65,25 @@ object Text {
 	def find(arr : Array[String], item : String): Int ={
 		java.util.Arrays.binarySearch(arr.asInstanceOf[Array[AnyRef]], item)
 	}
+
+
+	def entrophy(charArray : Array[Char]): Double ={
+		val len = charArray.length.toDouble
+		var charCnt = Map[Char, Int]()
+		var ret : Double = 0.0
+
+		for (c <- charArray){
+			if (!charCnt.contains(c))
+				charCnt += (c -> 0)
+
+			charCnt.updated(c, charCnt(c) + 1)
+		}
+
+		for((k, v) <- charCnt){
+			ret = ret - v.toDouble / len * Math.log(v.toDouble / len)
+		}
+
+		ret
+	}
+
 }
