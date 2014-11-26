@@ -10,8 +10,16 @@ import org.apache.spark.sql.SchemaRDD
  */
 object Data {
 	// get ad
-	def adInput(conf : Configuration, env : Env) : RDD[String] = {
+	def adContentWithId(conf : Configuration, env : Env) : RDD[(String, String, String)] ={
+		RawAd(conf, env).map{ row => (row(0).toString, row(1).toString + " " + row(2).toString, row(3).toString)}
+	}
+
+	def adContent(conf : Configuration, env : Env) : RDD[String] = {
 		RawAd(conf, env).map{ row => row(1).toString + " " + row(2).toString}
+	}
+
+	def adTag(conf : Configuration, env : Env): RDD[(String, String)] = {
+		RawAd(conf, env).map{ row => (row(0).toString, row(3).toString)}
 	}
 
 	private def RawAd (conf : Configuration, env : Env) : SchemaRDD = {
@@ -27,28 +35,37 @@ object Data {
 		"\nSELECT\n" +
 		"    ad_id,\n " +
 		"    title,\n" +
-		"    content\n"  +
+		"    content,\n"  +
+		"    tags\n" +
 		"FROM\n" +
 		"    logs.ad_content\n" +
 		"WHERE\n" +
 		"    category = '" + category + "'\n" +
 		"    and area_id = '" + areaid + "'\n" +
-		"    and dt between " + fromdate + " and " + todate
+		"    and dt between " + fromdate + " and " + todate + "\n" +
+		"    and tags is not null"
 	}
 
 
 	// get user action data
-	def UserActionInputRDD(conf : Configuration, env : Env) : RDD[(String, String, String)] = {
-		UserAction(conf, env).map{ row =>
-			val visitor_id = row(0).toString
-			val query = row(1).toString.split("\\,").filter(item => item.startsWith("query"))(0).substring(6)
-			val ad_id = row(2).toString
-
-			(ad_id, visitor_id, query)
+	def adVisitor(conf : Configuration, env : Env): RDD[(String, String)] ={
+		RawUserAction(conf, env).filter{
+			row => row(2).toString != "0"
+		}.map{
+			row => (row(2).toString, row(0).toString)
 		}
 	}
 
-	def UserAction(conf : Configuration, env : Env) : SchemaRDD = {
+	def query(conf : Configuration, env : Env): RDD[String] = {
+		RawUserAction(conf, env).filter{
+			row => row(1) != null && row(1).toString.indexOf("query=") >= 0
+		}.map{
+			row =>
+				row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6)
+		}.filter(_.length > 0)
+	}
+
+	def RawUserAction(conf : Configuration, env : Env) : SchemaRDD = {
 		env.hiveContext().hql(UserActionQuery(conf))
 	}
 
@@ -68,104 +85,16 @@ object Data {
 		"WHERE\n" +
 		"    dt between " + fromdate + " and " + todate + "\n" +
 		"    and referer['url'] not like '%select%'\n" +
-		"    and referer['query'] not like '%query=,%'\n" +
-		"    and referer['query'] like '%query=%'\n" +
-		"    and landing['ad_id'] <> 0\n" +
 		"    and landing['city_id'] = '" + areaid + "'\n" +
 		"    and landing['category_name_en'] = '" + category + "'\n" +
 		"    and landing['url_type'] = 4\n" +
 		"    and (platform = 'wap' or platform = 'web')\n"
 	}
 
-
-
-	// chuanzhu UV
-	def ad2VisitorInputRDD(conf : Configuration, env : Env): RDD[(String, String)] ={
-		ad2Visitor(conf, env).map{ row => (row(1).toString, row(0).toString)}
-	}
-
-	def ad2Visitor(conf : Configuration, env : Env): SchemaRDD ={
-		env.hiveContext().hql(ad2VistorQuery(conf))
-	}
-
-	def ad2VistorQuery(conf : Configuration) : String = {
-		val category = conf.category
-		val areaid = conf.areaId
-		val fromdate = conf.fromdate
-		val todate = conf.todate
-
-		"\nSELECT\n" +
-			"    visitor_id,\n" +
-			"    landing['ad_id']\n" +
-			"FROM\n" +
-			"    base.user_actions\n" +
-			"WHERE\n" +
-			"    dt between " + fromdate + " and " + todate + "\n" +
-			"    and referer['url'] not like '%select%'\n" +
-			"    and landing['ad_id'] <> 0\n" +
-			"    and landing['city_id'] = '" + areaid + "'\n" +
-			"    and landing['category_name_en'] = '" + category + "'\n" +
-			"    and landing['url_type'] = 4\n" +
-			"    and (platform = 'wap' or platform = 'web')\n"
-	}
-
-
-
-	// get adtag
-	def adTagInputRDD(conf : Configuration, env : Env) : RDD[(String, String)] = {
-		adTag(conf, env).map{
-			row =>
-				(row(0).toString, row(1).toString)
-		}
-	}
-
-	def adTag(conf : Configuration, env : Env): SchemaRDD = {
-		env.hiveContext().hql(adTagQuery(conf))
-	}
-
-	def adTagQuery(conf : Configuration): String ={
-		"\nSELECT\n" +
-		"    ad_id,\n" +
-		"    tags\n" +
-		"FROM\n" +
-		"    logs.ad_content\n" +
-		"WHERE\n" +
-		"    category = " + conf.category() + "\n"
-		"    and area_id = " + conf.areaId()
-	}
-
-
-
-	// get all tag
-	def allTag(conf : Configuration, env : Env) : Array[String] = {
-		(tag(conf, env) ++ tagAlias(conf, env)).sortWith(_ < _)
-	}
-
-	def tag(conf : Configuration, env : Env) : Array[String] = {
-		env.hiveContext().hql(tagQuery()).map{
-			row => row(0).toString
-		}.collect.distinct.sortWith(_ < _)
-	}
-
-
-	def tagAlias(conf : Configuration, env : Env) : Array[String] = {
-		env.hiveContext().hql(tagAliasQuery()).map{
-			row => row(0).toString
-		}.collect.distinct.sortWith(_ < _)
-	}
-
-	def tagQuery() : String = {
-		"\nSELECT\n" +
-		"    name\n" +
-		"  FROM\n" +
-		"    logs.tagn"
-	}
-
-	def tagAliasQuery() : String = {
-		"\nSELECT\n" +
-			"    codeName\n" +
-			"  FROM\n" +
-			"    logs.tag_alias"
-
+	// get geli
+	private val root = "/user/sunyifan/geli/"
+	def geli(conf : Configuration, env : Env): RDD[String] ={
+		val geliPath = root + conf.category() + "/" + conf.fromdate + "-" + conf.todate + "-" + conf.areaId
+		env.sparkContext().textFile(geliPath)
 	}
 }
