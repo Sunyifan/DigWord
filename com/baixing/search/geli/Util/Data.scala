@@ -29,7 +29,7 @@ object Data {
 		"    title,\n" +
 		"    content\n"  +
 		"FROM\n" +
-		"    shots.ad_content\n" +
+		"    logs.ad_content\n" +
 		"WHERE\n" +
 		"    category = '" + category + "'\n" +
 		"    and area_id = '" + areaid + "'\n" +
@@ -38,14 +38,14 @@ object Data {
 
 
 	// get user action data
-	def UserActionInputRDD(conf : Configuration, env : Env) : RDD[(String, String)] = {
+	def UserActionInputRDD(conf : Configuration, env : Env) : RDD[(String, String, String)] = {
 		UserAction(conf, env).map{ row =>
 			val visitor_id = row(0).toString
 			val query = row(1).toString.split("\\,").filter(item => item.startsWith("query"))(0).substring(6)
 			val ad_id = row(2).toString
 
-			(visitor_id + "|" + ad_id, query)
-		}.filter(item => item._2.length != 0)
+			(ad_id, visitor_id, query)
+		}
 	}
 
 	def UserAction(conf : Configuration, env : Env) : SchemaRDD = {
@@ -68,6 +68,7 @@ object Data {
 		"WHERE\n" +
 		"    dt between " + fromdate + " and " + todate + "\n" +
 		"    and referer['url'] not like '%select%'\n" +
+		"    and referer['query'] not like '%query=,%'\n" +
 		"    and referer['query'] like '%query=%'\n" +
 		"    and landing['ad_id'] <> 0\n" +
 		"    and landing['city_id'] = '" + areaid + "'\n" +
@@ -79,7 +80,6 @@ object Data {
 
 
 	// chuanzhu UV
-
 	def ad2VisitorInputRDD(conf : Configuration, env : Env): RDD[(String, String)] ={
 		ad2Visitor(conf, env).map{ row => (row(1).toString, row(0).toString)}
 	}
@@ -93,7 +93,6 @@ object Data {
 		val areaid = conf.areaId
 		val fromdate = conf.fromdate
 		val todate = conf.todate
-
 
 		"\nSELECT\n" +
 			"    visitor_id,\n" +
@@ -121,14 +120,18 @@ object Data {
 	}
 
 	def adTag(conf : Configuration, env : Env): SchemaRDD = {
-		env.hiveContext().hql(adTagQuery())
+		env.hiveContext().hql(adTagQuery(conf))
 	}
 
-	def adTagQuery(): String ={
+	def adTagQuery(conf : Configuration): String ={
 		"\nSELECT\n" +
-		"    *\n" +
+		"    ad_id,\n" +
+		"    tags\n" +
 		"FROM\n" +
-		"   logs.ad_tag"
+		"    logs.ad_content\n" +
+		"WHERE\n" +
+		"    category = " + conf.category() + "\n"
+		"    and area_id = " + conf.areaId()
 	}
 
 
