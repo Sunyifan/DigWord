@@ -13,7 +13,7 @@ object ThresholdDigger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
 
-	def words(rawText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+	def words(rawText : RDD[String], maxWordLength : Int = 8) : RDD[String] = {
 		processedText(rawText).flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
@@ -62,7 +62,7 @@ object ThresholdDigger {
 							item : (String, (Iterable[Double], Iterable[Double])) =>
 								val arr1 = item._2._1.toArray
 								val arr2 = item._2._2.toArray
-								if (arr1.length >0 && arr2.length > 0)
+								if (arr1.length > 0 && arr2.length > 0)
 									(item._1, Math.min(arr1(0), arr2(0)))
 								else if(arr1.length > 0)
 									(item._1, arr1(0))
@@ -72,28 +72,22 @@ object ThresholdDigger {
 						}
 	}
 
-	def dig(rawText : RDD[String], percentage : Double = 0.5): RDD[(String, (Double, Double, Double))] ={
+	def dig(rawText : RDD[String], freqThres : Double,
+		                                consolThres : Double,
+		                                    freeThres : Double): RDD[(String, (Double, Double, Double))] ={
 		val len = textLength(rawText)
 		val word = words(rawText)
 
-		val freq = frequency(word, len)
-		val freqThres = threshold(freq.map(_._2).collect, percentage)
-		val filteredFreq = freq.filter(_._2 > freqThres)
+		val freq = frequency(word, len).filter(_._2 > freqThres)
+		val consol = consolidate(freq.keys, freq.collect).filter(_._2 > consolThres)
+		val free = freedom(word).filter(_._2 > freeThres)
 
-		val consol = consolidate(filteredFreq.keys, filteredFreq.collect)
-		val consolThres = threshold(consol.map(_._2).collect, percentage)
-		val filteredConsol = consol.filter(_._2 > consolThres)
-
-		val free = freedom(filteredFreq.keys)
-		val freeThres = threshold(free.map(_._2).collect, percentage)
-		val filteredFree = free.filter(_._2 > freeThres)
-
-		filteredFreq.join(filteredConsol)
-				.join(filteredFree)
+		freq.join(consol)
+				.join(free)
 					.map{
 						item : (String, ((Double, Double), Double)) =>
 							(item._1, (item._2._1._1, item._2._1._2, item._2._2))
-					}
+					}.sortByKey()
 	}
 
 	def threshold(arr : Array[Double], percentage : Double) : Double = {
