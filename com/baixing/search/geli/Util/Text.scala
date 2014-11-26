@@ -7,11 +7,10 @@ import scala.collection.mutable.Map
  * Created by abzyme-baixing on 14-11-12.
  */
 object Text {
-	private val reserveChar = Array('*', '-', 'X', '.','\\', '/')
 	private val stopString = Array("\\r", "\\n")
 
 	private def isValidChar(c : Character): Boolean ={
-		Character.isAlphabetic(c.toInt) || Character.isDigit(c) || reserveChar.contains(c)
+		Character.isAlphabetic(c.toInt) || Character.isDigit(c)
 	}
 
 	private def removeStopString(str : String) : Array[String] = {
@@ -37,7 +36,7 @@ object Text {
 			}
 
 			if (buf.length != 0)
-				ret ++= removeStopString(buf.toString)
+				ret ++= removeStopString(buf.toString.toLowerCase)
 
 			if (start == end)
 				end += 1
