@@ -72,9 +72,9 @@ object ThresholdDigger {
 						}
 	}
 
-	def dig(rawText : RDD[String], freqThres : Double,
-		                                consolThres : Double,
-		                                    freeThres : Double): RDD[(String, (Double, Double, Double))] ={
+	def dig(rawText : RDD[String], freqThres : Double = 10e-7,
+		                                consolThres : Double = 10,
+		                                    freeThres : Double = 0.5): RDD[(String, (Double, Double, Double))] ={
 		val len = textLength(rawText)
 		val word = words(rawText)
 
