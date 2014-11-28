@@ -27,7 +27,8 @@ object Env {
 	def setMaster(master : String) = conf.setMaster(master)
 	def setAppName(appName : String) = conf.setAppName(appName)
 	def setJar(jar : String) = conf.setJars(Array(jar))
-	def setExecutorMemoery(mem : String) = conf.set("spark.executor.memory", mem)
+	def setExecutorMemory(mem : String) = conf.set("spark.executor.memory", mem)
+	def setCoreMax(core : String) = conf.set("spark.cores.max", core)
 
 	def getProperty(k : String) : String = {
 		conf.get(k)
@@ -41,7 +42,8 @@ object Env {
 		setAppName(args(4))
 		setMaster(args(5))
 		setJar(args(6))
-		setExecutorMemoery(args(7))
+		setExecutorMemory(args(7))
+		setCoreMax(args(8))
 		sparkContext()
 	}
 }
