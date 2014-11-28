@@ -21,6 +21,7 @@ object Data {
 		Env.hiveContext().sql(AdQuery())
 	}
 
+
 	private def AdQuery () : String = {
 		val category = Env.getProperty("category")
 		val areaid = Env.getProperty("area_id")
@@ -103,4 +104,20 @@ object Data {
 													Env.getProperty("todate") + "-" + Env.getProperty("area_id")
 		Env.sparkContext().textFile(geliPath)
 	}
+
+
+	// temp just for test all ad
+	def allAd() : RDD[String] = {
+		Env.hiveContext().sql(allAdQuery()).map{ row => row(0).toString + row(1).toString}
+	}
+
+	private def allAdQuery() : String = {
+		"\nSELECT\n" +
+			"    title,\n" +
+			"    content\n"  +
+			"FROM\n" +
+			"    logs.ad_content\n"
+
+	}
+
 }
