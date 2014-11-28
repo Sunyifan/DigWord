@@ -5,6 +5,8 @@ import org.apache.spark.SparkContext._
 
 import com.baixing.search.geli.Util.Text
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Created by abzyme-baixing on 14-11-12.
  */
@@ -13,8 +15,8 @@ object ThresholdDigger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
 
-	def words(rawText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
-		processedText(rawText).flatMap{line : String => Text.splitWord(line, maxWordLength)}
+	def words(processedText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+		processedText.flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
 	def frequency(words : RDD[String], textLength : Long) : RDD[(String, Double)] = {
@@ -22,30 +24,47 @@ object ThresholdDigger {
 				.reduceByKey(_ + _)
 					.map{item : (String, Int) => (item._1, item._2.toDouble / (textLength - item._1.length + 1))}
 						.sortByKey()
+							.cache
 	}
 
-	def consolidate(words : RDD[String], dictionary : Array[(String, Double)]) : RDD[(String, Double)] = {
+	def consolidate(words : RDD[String], frequency : RDD[(String, Double)]) : RDD[(String, Double)] = {
 		words.filter(_.length > 1)
-				.map{word : String =>
-					var consolidate = Double.MaxValue
-					val words = dictionary.map(_._1)
-					val wordIndex = Text.find(words, word)
-
-					for (num <- 1 to word.length - 1){
-						val leftWord = word.substring(0, num)
-						val rightWord = word.substring(num)
-
-						val leftWordIndex = Text.find(words, leftWord)
-						val rightWordIndex = Text.find(words, rightWord)
-						if( leftWordIndex >= 0 && rightWordIndex >= 0 ){
-							consolidate = math.min(consolidate, dictionary(wordIndex)._2  /
-									(dictionary(leftWordIndex)._2 * dictionary(rightWordIndex)._2))
-						}
-					}
-
-					(word, consolidate)
+				.flatMap{
+			word : String =>
+				val ret = new ArrayBuffer[(String, String)]()
+				for (num <- 1 to word.length - 1) {
+					ret += ((word.substring(0, num), word))
+					ret += ((word.substring(num), word))
 				}
+
+				ret += ((word, word))
+		}.join(frequency).distinct.map{
+			item : (String, (String, Double)) => (item._2._1, (item._1, item._2._2))
+		}.groupByKey().map{
+			item : (String, Iterable[(String, Double)]) =>
+				val word = item._1
+				val dictionary = item._2.toArray
+				val words = dictionary.map(_._1).sortWith(_ < _)
+
+				val wordIndex = Text.find(words, word)
+				var consolidate = Double.MaxValue
+
+				for (num <- 1 to word.length - 1) {
+					val leftWord = word.substring(0, num)
+					val rightWord = word.substring(num)
+
+					val leftWordIndex = Text.find(words, leftWord)
+					val rightWordIndex = Text.find(words, rightWord)
+					if( leftWordIndex >= 0 && rightWordIndex >= 0 ){
+						consolidate = math.min(consolidate, dictionary(wordIndex)._2  /
+							(dictionary(leftWordIndex)._2 * dictionary(rightWordIndex)._2))
+					}
+				}
+
+				(word, consolidate)
+		}.sortByKey()
 	}
+
 
 	def freedom(words : RDD[String]): RDD[(String, Double)] ={
 		val leftFreedom = words.filter(_.length > 1)
@@ -76,10 +95,11 @@ object ThresholdDigger {
 		                                consolThres : Double = 10,
 		                                    freeThres : Double = 0.5): RDD[(String, (Double, Double, Double))] ={
 		val len = textLength(rawText)
-		val word = words(rawText)
+		val text = processedText(rawText)
+		val word = words(text)
 
 		val freq = frequency(word, len).filter(_._2 > freqThres)
-		val consol = consolidate(freq.keys, freq.collect).filter(_._2 > consolThres)
+		val consol = consolidate(freq.keys, freq).filter(_._2 > consolThres)
 		val free = freedom(word).filter(_._2 > freeThres)
 
 		freq.join(consol)
