@@ -13,7 +13,7 @@ object ThresholdDigger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
 
-	def words(rawText : RDD[String], maxWordLength : Int = 8) : RDD[String] = {
+	def words(rawText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
 		processedText(rawText).flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
