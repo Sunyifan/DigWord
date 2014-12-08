@@ -32,8 +32,9 @@ object UserActionConverter {
 		rawUserAction.filter{row => row(2) != null}
 						.map{row => (row(0),row(2))}
 							.map{case (visitorid : String, referer : Map[String, String]) => (visitorid, referer("query"))}
-								.filter(_._2.indexOf("query=") >= 0)
+								.filter{ item : (String, String) => item._2 != null && item._2.indexOf("query=") >= 0}
 									.map{ item => (item._1, item._2.split(",").filter(_.startsWith("query=")).head.substring(6))}
+										.filter(_._2.length != 0)
 	}
 
 	def baixingQueryAndAd() : RDD[(String, String, String)] = {
@@ -41,8 +42,10 @@ object UserActionConverter {
 						.map{row => (row(0), row(2), row(3))}
 							.map{case (visitorid : String, referer : Map[String, String], landing : Map[String, String])
 									=> (visitorid, referer("query"), landing("ad_id"))}
-								.filter(_._2.indexOf("query=") >= 0)
-									.filter(_._3 != "0")
+								.filter{ item : (String, String, String) => item._2 != null && item._2.indexOf("query=") >= 0}
+									.map{ item => (item._1, item._2.split(",").filter(_.startsWith("query=")).head.substring(6), item._3)}
+										.filter(_._3 != "0")
+											.filter(_._2.length != 0)
 	}
 
 	// seo搜索串的转化
@@ -50,17 +53,21 @@ object UserActionConverter {
 		rawUserAction.filter{row => row(1) != null && row(2) != null}
 						.map{row => (row(0),row(1),row(2), row(3))}
 							.filter{case (visitorid : String, visitor : Map[String, String], referer : Map[String, String], landing : Map[String, String])
-										=> visitor("session_top_source") == "SEO" && landing("session_page_depth") == "1"}
+										=> referer.contains("query_word") && visitor("session_top_source") == "SEO" &&
+													landing("session_page_depth") == "1"}
 								.map{case (visitorid : String, visitor : Map[String, String], referer : Map[String, String], landing : Map[String, String])
 										=> (visitorid, referer("query_word"))}
+									.filter(_._2.length != 0)
 	}
 
 	def seoQueryAndAd() : RDD[(String, String, String)] = {
 		rawUserAction.filter{row => row(1) != null && row(2) != null && row(3) != null}
 						.map{row => (row(0),row(1),row(2), row(3))}
 							.filter{case (visitorid : String, visitor : Map[String, String], referer : Map[String, String], landing : Map[String, String])
-									=> visitor("session_top_source") == "SEO" && landing("session_page_depth") == "1" && landing("ad_id") != "0"}
+									=> referer.contains("query_word") && visitor("session_top_source") == "SEO" &&
+													landing("session_page_depth") == "1" && landing("ad_id") != "0"}
 								.map{case (visitorid : String, visitor : Map[String, String], referer : Map[String, String], landing : Map[String, String])
 									=> (visitorid, referer("query_word"), landing("ad_id"))}
+									.filter(_._2.length != 0)
 	}
 }
