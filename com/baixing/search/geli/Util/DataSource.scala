@@ -1,5 +1,6 @@
 package com.baixing.search.geli.Util
 
+import akka.event.slf4j.Logger
 import com.baixing.search.geli.Environment.Env
 import org.apache.spark.sql.SchemaRDD
 
@@ -14,6 +15,15 @@ object DataSource {
 	private val areaid = Env.getProperty("area_id")
 	private val fromdate = Env.getProperty("fromdate")
 	private val todate = Env.getProperty("todate")
+
+
+	def rawAd(): SchemaRDD ={
+		execute(AdQuery())
+	}
+
+	def rawUserAction() : SchemaRDD = {
+		execute(UserActionQuery())
+	}
 
 	private def execute(sql : String) : SchemaRDD = {
 		Env.hiveContext().sql(sql)
@@ -36,15 +46,15 @@ object DataSource {
 	private def UserActionQuery() : String = {
 		"\nSELECT\n" +
 			"   visitor_id,\n" +
-			"   visitor\n" +
+			"   visitor,\n" +
 			"   referer,\n" +
 			"   landing\n" +
 			"FROM\n" +
 			"   base.user_actions\n" +
 			"WHERE\n" +
-			"   and landing['category_name_en'] = '" +  category+ "'\n" +
-			"   and landing['city_id'] = '" + areaid + "'" +
-			"   dt between '" + fromdate + "' and '" + todate + "'\n" +
+			"   landing['category_name_en'] = '" +  category+ "'\n" +
+			"   and landing['city_id'] = '" + areaid + "'\n" +
+			"   and dt between " + fromdate + " and " + todate + "\n" +
 			"   and platform in ('wap','web')"
 	}
 }
