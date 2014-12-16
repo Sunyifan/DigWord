@@ -15,7 +15,7 @@ object ThresholdDigger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
 
-	def words(processedText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+	def words(processedText : RDD[String], maxWordLength : Int = 5) : RDD[String] = {
 		processedText.flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
@@ -122,7 +122,7 @@ object ThresholdDigger {
 						}.filter(_._1.length > 1)
 	}
 
-	def dig(rawText : RDD[String], freqThres : Double = 10e-6,
+	def dig(rawText : RDD[String], freqThres : Double = 10e-7,
 	                                    consolThres : Double = 100,
 		                                    freeThres : Double = 0.8): RDD[(String, (Double, Double, Double))] ={
 		val len = textLength(rawText)
@@ -136,6 +136,6 @@ object ThresholdDigger {
 		freq.join(consol).join(free).map{
 			item : (String, ((Double, Double), Double))
 				=> (item._1, (item._2._1._1, item._2._1._2, item._2._2))
-		}.sortByKey().filter(_._1.length > 1)
+		}.sortByKey().filter{item => item._1.length > 1 && item._1.length < 5}
 	}
 }
