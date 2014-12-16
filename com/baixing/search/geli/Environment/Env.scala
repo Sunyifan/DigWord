@@ -21,14 +21,13 @@ object Env {
 	}
 
 	private def set(k : String, v : String) = conf.set(k, v)
-	def setMaster(master : String) = conf.setMaster(master)
-	def setAppName(appName : String) = conf.setAppName(appName)
 
 	def getProperty(k : String) : String = {
 		conf.get(k)
 	}
 
 	def init(args : Array[String]): Unit = {
+		set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 		set("area_id", args(0))
 		set("category", args(1))
 		set("fromdate", args(2))
@@ -38,7 +37,6 @@ object Env {
 	}
 
 	private val ROOT = "/user/sunyifan"
-
 
 	def job() : String = {
 		getProperty("type").split("\\.")(0)
