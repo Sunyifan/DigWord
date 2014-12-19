@@ -2,7 +2,6 @@ package com.baixing.search.geli.Environment
 
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
-import org.wltea.analyzer.dic.Dictionary
 
 /**
  * Created by abzyme-baixing on 14-11-12.

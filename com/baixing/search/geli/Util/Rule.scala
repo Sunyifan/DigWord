@@ -6,11 +6,11 @@ import scala.util.control.Breaks
  * Created by abzyme-baixing on 14-12-18.
  */
 object Rule {
-	def isPearl(word : String, pearlTags : Array[String]): Boolean ={
+	def isPearl(word : String, pearlTags : Set[String]): Boolean ={
 		pearlTags.contains(word)
 	}
 
-	def containPearl(word : String, pearlTags : Array[String]) : Boolean ={
+	def containPearl(word : String, pearlTags : Set[String]) : Boolean ={
 		val loop = new Breaks
 		var ret = false
 
