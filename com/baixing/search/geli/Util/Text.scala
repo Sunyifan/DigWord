@@ -1,13 +1,18 @@
 package com.baixing.search.geli.Util
 
+import java.io.StringReader
+
+import org.wltea.analyzer.core.{Lexeme, IKSegmenter}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
+import scala.util.control.Breaks
 
 /**
  * Created by abzyme-baixing on 14-11-12.
  */
 object Text {
-	private val stopString = Array("\\r", "\\n")
+	private val stopString = Array("\\r", "\\n", "\\\r", "\\\n")
 
 	private def isValidChar(c : Character): Boolean ={
 		Character.isAlphabetic(c.toInt) || Character.isDigit(c)
@@ -86,4 +91,23 @@ object Text {
 		ret
 	}
 
+	def ikSeg(text : String): StringBuilder ={
+		val reader = new StringReader(text)
+		val analyzer = new IKSegmenter(reader, true)
+
+		var t : Lexeme = null
+		val loop = new Breaks
+		val sb = new StringBuilder
+
+		loop.breakable{
+			while(true){
+				t = analyzer.next()
+				if (t == null)
+					loop.break()
+				sb ++= t.getLexemeText
+			}
+		}
+
+		sb
+	}
 }

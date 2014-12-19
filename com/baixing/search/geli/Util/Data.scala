@@ -13,12 +13,16 @@ object Data {
 		RawAd().filter{row => row(3) != null && !row(3).toString.isEmpty}.map{ row => (row(0).toString, row(3).toString)}
 	}
 
-	def adContentWithId() : RDD[(String, String, String)] ={
-		RawAd().filter{row => row(3) != null}.map{ row => (row(0).toString, row(1).toString + " " + row(2).toString, row(3).toString)}
+	def adContentWithIdAndTag() : RDD[(String, String, String)] ={
+		RawAd().filter{row => row(3) != null && !row(3).toString.isEmpty}.map{ row => (row(0).toString, row(1).toString + " " + row(2).toString, row(3).toString)}
 	}
 
 	def adContent() : RDD[String] = {
 		RawAd().map{ row => (row(1).toString + " " + row(2).toString)}
+	}
+
+	def adContentWithId() : RDD[(String, String)] = {
+		RawAd().map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
 	}
 
 	def RawAd () : SchemaRDD = {
@@ -55,10 +59,21 @@ object Data {
 		}
 	}
 
+	def UserActionWithQuery() : RDD[(String, String)] = {
+		RawUserAction().filter{
+			row => row(1) != null && row(1).toString.indexOf("query=") >= 0 &&
+				row(1).toString.split(",").filter(_.startsWith("query")).length > 0
+		}.map{
+			row =>
+				(row(0).toString, row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6))
+		}.filter(_._2.length > 0)
+
+	}
+
 	def UserActionQueryOnly(): RDD[String] = {
 		RawUserAction().filter{
 			row => row(1) != null && row(1).toString.indexOf("query=") >= 0 &&
-							row(1).toString.split(",").filter(_.startsWith("query")).length > 0
+				row(1).toString.split(",").filter(_.startsWith("query")).length > 0
 		}.map{
 			row =>
 				row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6)
@@ -68,6 +83,10 @@ object Data {
 	def UserActionWithAd() : RDD[(String, String)] = {
 		RawUserAction().filter{row => row(2).toString != 0}
 							.map{ row => (row(0).toString, row(2).toString)}
+	}
+
+	def UserActionUV() : Long ={
+		RawUserAction().count()
 	}
 
 	def UserActionWithQueryAndAd(): RDD[(String, String, String)] = {
@@ -84,7 +103,7 @@ object Data {
 	}
 
 	def RawUserAction() : SchemaRDD = {
-		Env.hiveContext().sql(UserActionQuery()).persist()
+		Env.hiveContext().sql(UserActionQuery())
 	}
 
 	def UserActionQuery() : String = {
@@ -129,7 +148,7 @@ object Data {
 
 
 	def RawSeo() : SchemaRDD = {
-		Env.hiveContext().sql(SeoQuery()).persist()
+		Env.hiveContext().sql(SeoQuery())
 	}
 
 	def SeoQuery() : String ={
@@ -179,7 +198,9 @@ object Data {
 		"FROM\n" +
 		"   logs.tagn\n" +
 		"WHERE\n" +
-		"   category like '%fang%'"
+		"   category like '%fang%'\n" +
+		"and \n" +
+		"   area like '%m30%'\n"
 	}
 
 	// interface for geli
