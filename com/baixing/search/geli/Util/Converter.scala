@@ -7,7 +7,7 @@ import org.apache.spark.rdd.RDD
  */
 
 
-// Ad相关的数据预处理层，预处理原始数据，给出计算输入
+// Ad相关的数据预处理
 object AdConverter {
 	// in : [ad_id, ad_title, ad_content, tags : string]
 	private val rawAd = DataSource.rawAd().persist()
@@ -17,8 +17,8 @@ object AdConverter {
 		rawAd.filter{row => row(3) != null}.map{row => (row(0).toString, row(3).toString.split("@"))}
 	}
 
-	def adContent() : RDD[String] = {
-		rawAd.filter{row => row(1) != null && row(2) != null}.map{row => row(1).toString + "  " + row(2).toString}
+	def adContent() : RDD[(String, String)] = {
+		rawAd.filter{row => row(1) != null && row(2) != null}.map{row => (row(0).toString, row(1).toString + "  " + row(2).toString)}
 	}
 }
 
