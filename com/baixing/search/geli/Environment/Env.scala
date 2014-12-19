@@ -2,13 +2,13 @@ package com.baixing.search.geli.Environment
 
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
+import org.wltea.analyzer.dic.Dictionary
 
 /**
  * Created by abzyme-baixing on 14-11-12.
  */
 object Env {
 	private var sc : SparkContext = null
-	private var hc : HiveContext = null
 	private val conf : SparkConf = new SparkConf()
 
 	def sparkContext() : SparkContext = {
@@ -18,31 +18,39 @@ object Env {
 	}
 
 	def hiveContext() : HiveContext = {
-		if (hc == null)
-			hc = new HiveContext(sc)
-		hc
+		new HiveContext(sc)
 	}
 
 	private def set(k : String, v : String) = conf.set(k, v)
-	def setMaster(master : String) = conf.setMaster(master)
-	def setAppName(appName : String) = conf.setAppName(appName)
-	def setJar(jar : String) = conf.setJars(Array(jar))
-	def setExecutorMemoery(mem : String) = conf.set("spark.executor.memory", mem)
 
 	def getProperty(k : String) : String = {
 		conf.get(k)
 	}
 
 	def init(args : Array[String]): Unit = {
+		set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 		set("area_id", args(0))
 		set("category", args(1))
 		set("fromdate", args(2))
 		set("todate", args(3))
-		setAppName(args(4))
-		setMaster(args(5))
-		setJar(args(6))
-		setExecutorMemoery(args(7))
+		set("type", args(4))
+		set("partition", args(5))
 		sparkContext()
+		sparkContext().setCheckpointDir("/user/sunyifan/checkpoint")
+	}
+
+	private val ROOT = "/user/sunyifan"
+
+	def job() : String = {
+		getProperty("type").split("\\.")(0)
+	}
+
+	def src() : String = {
+		getProperty("type").split("\\.")(1)
+	}
+
+	def output() : String= {
+		getProperty("area_id") + "-" + getProperty("category") + "-" + getProperty("fromdate") + "-" + getProperty("todate")
 	}
 }
 

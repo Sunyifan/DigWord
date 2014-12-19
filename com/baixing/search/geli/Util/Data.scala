@@ -3,23 +3,32 @@ package com.baixing.search.geli.Util
 import com.baixing.search.geli.Environment.Env
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SchemaRDD
-
+import org.apache.spark.SparkContext._
 /**
  * Created by abzyme-baixing on 14-11-27.
  */
 object Data {
 	// ad interface
-	def adContentWithId() : RDD[(String, String, String)] ={
-		RawAd().map{ row => (row(0).toString, row(1).toString + " " + row(2).toString, row(3).toString)}
+	def adTag() : RDD[(String, String)] = {
+		RawAd().filter{row => row(3) != null && !row(3).toString.isEmpty}.map{ row => (row(0).toString, row(3).toString)}
+	}
+
+	def adContentWithIdAndTag() : RDD[(String, String, String)] ={
+		RawAd().filter{row => row(3) != null && !row(3).toString.isEmpty}.map{ row => (row(0).toString, row(1).toString + " " + row(2).toString, row(3).toString)}
 	}
 
 	def adContent() : RDD[String] = {
 		RawAd().map{ row => (row(1).toString + " " + row(2).toString)}
 	}
 
-	private def RawAd () : SchemaRDD = {
-		Env.hiveContext().sql(AdQuery())
+	def adContentWithId() : RDD[(String, String)] = {
+		RawAd().map{ row => (row(0).toString, row(1).toString + " " + row(2).toString)}
 	}
+
+	def RawAd () : SchemaRDD = {
+		Env.hiveContext().sql(AdQuery()).persist()
+	}
+
 
 	private def AdQuery () : String = {
 		val category = Env.getProperty("category")
@@ -37,8 +46,7 @@ object Data {
 			"WHERE\n" +
 			"    category = '" + category + "'\n" +
 			"    and area_id = '" + areaid + "'\n" +
-			"    and dt between " + fromdate + " and " + todate + "\n" +
-			"    and tags is not null"
+			"    and dt between " + fromdate + " and " + todate + "\n"
 	}
 
 
@@ -51,22 +59,47 @@ object Data {
 		}
 	}
 
-	def query(): RDD[String] = {
+	def UserActionWithQuery() : RDD[(String, String)] = {
 		RawUserAction().filter{
-			row => row(1) != null && row(1).toString.indexOf("query=") >= 0
+			row => row(1) != null && row(1).toString.indexOf("query=") >= 0 &&
+				row(1).toString.split(",").filter(_.startsWith("query")).length > 0
+		}.map{
+			row =>
+				(row(0).toString, row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6))
+		}.filter(_._2.length > 0)
+
+	}
+
+	def UserActionQueryOnly(): RDD[String] = {
+		RawUserAction().filter{
+			row => row(1) != null && row(1).toString.indexOf("query=") >= 0 &&
+				row(1).toString.split(",").filter(_.startsWith("query")).length > 0
 		}.map{
 			row =>
 				row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6)
 		}.filter(_.length > 0)
 	}
 
-	def UserActionBeforeVad(): RDD[(String, String, String)] ={
-		RawUserAction().filter{ row => row(2).toString != "0" && row(1).toString.indexOf("query=") >= 0}
-			.map{ row =>
-			val visitor_id = row(0).toString
-			val query = row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6)
-			val ad_id = row(2).toString
-			(visitor_id, query, ad_id)}.filter(_._2.length != 0)
+	def UserActionWithAd() : RDD[(String, String)] = {
+		RawUserAction().filter{row => row(2).toString != 0}
+							.map{ row => (row(0).toString, row(2).toString)}
+	}
+
+	def UserActionUV() : Long ={
+		RawUserAction().count()
+	}
+
+	def UserActionWithQueryAndAd(): RDD[(String, String, String)] = {
+		RawUserAction().filter{row =>
+						row(1) != null &&
+						row(1).toString.indexOf("query=") >= 0 &&
+						row(2).toString != "0" &&
+						row(1).toString.split(",").filter(_.startsWith("query")).length > 0}
+							.map{ row => (row(0).toString,
+									row(1).toString.split(",").filter(_.startsWith("query="))(0).substring(6),
+										row(2).toString)}
+								.filter(_._2.length > 0)
+
 	}
 
 	def RawUserAction() : SchemaRDD = {
@@ -91,16 +124,90 @@ object Data {
 			"    and referer['url'] not like '%select%'\n" +
 			"    and landing['city_id'] = '" + areaid + "'\n" +
 			"    and landing['category_name_en'] = '" + category + "'\n" +
-			"    and landing['url_type'] = 4\n" +
 			"    and (platform = 'wap' or platform = 'web')\n"
 	}
 
 
-	// temp interface for geli
-	private val root = "/user/sunyifan/geli/"
-	def geli() : RDD[String] = {
-		val geliPath = root + Env.getProperty("category") + "/" + Env.getProperty("fromdate") + "-" +
-													Env.getProperty("todate") + "-" + Env.getProperty("area_id")
-		Env.sparkContext().textFile(geliPath)
+	// seo interface
+	def SeoWithAd() : RDD[(String, String)] = {
+		RawUserAction().filter{row => row(2).toString != 0}
+			.map{ row => (row(0).toString, row(2).toString)}
 	}
+
+	def SeoWithQuery() : RDD[String] = {
+		RawSeo().filter{ row =>
+			row(1) != null && row(1).toString.length != 0}
+			.map{row => row(1).toString}
+	}
+
+	def SeoWithQueryAndAd() : RDD[(String, String, String)] = {
+		RawSeo().filter{ row =>
+			row(2) == null && row(2).toString != "0" && row(1) != null && row(1).toString.length != 0}
+					.map{row => (row(0).toString, row(1).toString, row(2).toString)}
+	}
+
+
+	def RawSeo() : SchemaRDD = {
+		Env.hiveContext().sql(SeoQuery())
+	}
+
+	def SeoQuery() : String ={
+		"\nSELECT\n" +
+			"   visitor_id,\n" +
+			"   referer['query_word'],\n" +
+			"   landing['ad_id']\n" +
+			"FROM\n" +
+			"   base.user_actions\n" +
+			"WHERE\n" +
+			"   dt between '" + Env.getProperty("fromdate") + "' and '" + Env.getProperty("todate") + "'\n" +
+			"   and visitor['session_top_source'] = 'SEO'\n" +
+			"   and landing['session_page_depth'] = '1'\n" +
+			"   and landing['category_name_en'] = '" +  Env.getProperty("category")+ "'\n" +
+			"   and platform in ('wap','web')\n" +
+			"   and landing['city_id'] = '" + Env.getProperty("area_id") + "'"
+	}
+
+
+	// interface for tag and tag alias
+	def allTag() : Array[String] = {
+		Env.sparkContext().textFile("/user/sunyifan/allTag.csv").map((_, null)).sortByKey().keys.collect()
+	}
+
+	def tagQuery() : String = {
+		"\nSELECT\n" +
+		"   name\n" +
+		"FROM\n" +
+		"   logs.tagn"
+	}
+
+	def tagAliasQuery() : String = {
+		"\nSELECT\n" +
+		"   body\n" +
+		"FROM\n" +
+		"   logs.tag_alias"
+	}
+
+
+	def fangTag() : Array[String] = {
+		Env.sparkContext().textFile("/user/sunyifan/fangTag.csv").map((_, null)).sortByKey().keys.collect()
+	}
+
+	def fangTagQuery() : String = {
+		"\nSELECT\n" +
+		"   name\n" +
+		"FROM\n" +
+		"   logs.tagn\n" +
+		"WHERE\n" +
+		"   category like '%fang%'\n" +
+		"and \n" +
+		"   area like '%m30%'\n"
+	}
+
+	// interface for geli
+	def gelis() : RDD[String] = {
+		Env.sparkContext().textFile("/user/sunyifan/geli/" + Env.src() + "/" +
+										Env.getProperty("area_id") + "-" + Env.getProperty("category") +
+											"-" + Env.getProperty("fromdate") + "-" + Env.getProperty("todate"))
+	}
+
 }
