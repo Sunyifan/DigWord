@@ -72,7 +72,7 @@ object Rule {
 		if (word.length == 2)
 			free > 1.1
 		else if(word.length == 3)
-			free > 0.9
+			free > 1.0
 		else if(word.length == 4)
 			free > 0.8
 		else if(word.length == 5)
