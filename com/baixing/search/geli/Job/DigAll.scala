@@ -1,8 +1,7 @@
 package com.baixing.search.geli.Job
 
-import com.baixing.search.geli.Digger.ThresholdDigger
 import com.baixing.search.geli.Environment.Env
-import com.baixing.search.geli.Util.{Data, Text}
+import com.baixing.search.geli.Util.{Digger, Data, Text}
 
 /**
  * Created by abzyme-baixing on 14-12-8.
@@ -27,7 +26,7 @@ object DigAll {
 									.filter{q : String => q.length != 0 && q != "null"}
 										.repartition(20)
 
-		val all = ad.union(query).union(seo).filter{item => Text.find(allTags, item) < 0}
-		ThresholdDigger.dig(all).saveAsTextFile("/user/sunyifan/geli/" + Env.src() + "/" + Env.output())
+		val all = ad.union(query).union(seo).filter{item => allTags.toSet.contains(item)}
+		Digger.dig(all).saveAsTextFile("/user/sunyifan/geli/" + Env.src() + "/" + Env.output())
 	}
 }

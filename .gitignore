@@ -18,7 +18,6 @@ project/plugins/project/
 .worksheet
 
 com/baixing/search/geli/Test/
-com/baixing/search/geli/Unittest/
 com/baixing/search/geli/TempJob/
 com/baixing/search/geli/Job/
 

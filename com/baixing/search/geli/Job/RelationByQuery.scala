@@ -128,7 +128,7 @@ object RelationByQuery {
 			val gelis = Data.gelis().map {
 				line: String =>
 					line.split(",")(0).substring(1)
-			}.filter{ geli: String => Text.find(allTag, geli) < 0}.collect
+			}.filter{ geli => allTag.toSet.contains(geli)}.collect
 
 			val geli2UV = geliUV(gelis, uaWithQuery.union(seoWithQuery))
 
@@ -151,7 +151,7 @@ object RelationByQuery {
 						(pearl2geliUV.toDouble / geliUV.toDouble) * (totalUV.toDouble / pearlUV.toDouble),
 						(pearl2geliUV.toDouble / geliUV.toDouble)
 						)
-			}.filter(_._4 > 1).filter(item => Text.find(fangTag, item._2) >= 0).map{
+			}.filter(_._4 > 1).filter(item => fangTag.toSet.contains(item._1)).map{
 				item  =>
 					(item._1, (item._2, item._3, item._4, item._5))
 			}.groupByKey()

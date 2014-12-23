@@ -76,7 +76,7 @@ object RelationByAd {
 		 Data.gelis().map {
 			 line: String =>
 				 line.split(",")(0).substring(1)
-		 }.filter{ geli: String => Text.find(allTag, geli) < 0}.collect
+		 }.filter{ geli: String => allTag.toSet.contains(geli)}.collect
 	 }
 
 	 def main(args : Array[String]): Unit = {
@@ -91,8 +91,8 @@ object RelationByAd {
 
 		 val adContentWithIdAndTag = Data.adContentWithIdAndTag()
 
-		 val pearl2Ad = pearlAd(adContentWithIdAndTag).filter{item => Text.find(fangTag, item._1) >= 0}
-		 val geli2Ad = geliAd(adContentWithIdAndTag, gelis).filter{item => Text.find(allTag, item._1) < 0}
+		 val pearl2Ad = pearlAd(adContentWithIdAndTag).filter{item => fangTag.toSet.contains(item._1)}
+		 val geli2Ad = geliAd(adContentWithIdAndTag, gelis).filter{item => allTag.toSet.contains(item._1)}
 		 val pearl2Geli = pearlAndGeli(adContentWithIdAndTag, gelis)
 
 
