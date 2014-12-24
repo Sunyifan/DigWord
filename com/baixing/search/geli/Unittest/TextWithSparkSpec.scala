@@ -46,7 +46,7 @@ class TextWithSparkSpec extends FlatSpec{
 	}
 
 	val testString3 = "挖蛤蜊"
-	it should "success in split word" in {
+	it should "success in split word split word with spark" in {
 		sc = new SparkContext("local", "test")
 
 		try {
