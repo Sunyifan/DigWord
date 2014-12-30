@@ -5,7 +5,7 @@ import org.apache.log4j.{Logger, Level}
 /**
  * Created by abzyme-baixing on 14-12-23.
  */
-object SparkUtil {
+object Spark {
 	def silenceSpark() {
 		setLogLevels(Level.OFF, Seq("org", "spark", "org.eclipse.jetty", "akka"))
 	}

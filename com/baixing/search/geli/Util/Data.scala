@@ -175,7 +175,8 @@ object Data {
 
 	def tagQuery() : String = {
 		"\nSELECT\n" +
-		"   name\n" +
+		"   name,\n" +
+		"   dimensionId\n" +
 		"FROM\n" +
 		"   logs.tagn"
 	}
@@ -188,19 +189,24 @@ object Data {
 	}
 
 
+	def fangTagWithDimensionId() : RDD[(String, String)] = {
+		Env.hiveContext().sql(fangTagQuery()).map{ row => (row(0).toString, row(1).toString)}
+	}
+
 	def fangTag() : Array[String] = {
-		Env.sparkContext().textFile("/user/sunyifan/fangTag.csv").map((_, null)).sortByKey().keys.collect()
+		Env.hiveContext().sql(fangTagQuery).map{row => row(0).toString}.map((_, null)).sortByKey().keys.collect()
 	}
 
 	def fangTagQuery() : String = {
 		"\nSELECT\n" +
-		"   name\n" +
+		"   name,\n" +
+		"   dimension_id\n" +
 		"FROM\n" +
 		"   logs.tagn\n" +
 		"WHERE\n" +
 		"   category like '%fang%'\n" +
 		"and \n" +
-		"   area like '%m30%'\n"
+		"   area like '%m30'\n"
 	}
 
 	// interface for geli

@@ -1,7 +1,7 @@
 package com.baixing.search.geli.Job
 
 import com.baixing.search.geli.Environment.Env
-import com.baixing.search.geli.Util.{Data, Text}
+import com.baixing.search.geli.Util.{Rule, Data, Text}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
@@ -83,17 +83,20 @@ object RelationByAd {
 		 Env.init(args)
 
 		 val fangTag = Data.fangTag()
-		 val allTag = Data.allTag()
-		 val gelis = geli(allTag)
 
+		 val bFangTag = Env.sparkContext().broadcast(fangTag)
+		 val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env.output()).map{line => line.split(",").head}
+
+		 val bGelis = Env.sparkContext().broadcast(gelis.collect())
 		 val ads = Data.adContentWithId()
+
 		 val adNum = ads.count()
 
 		 val adContentWithIdAndTag = Data.adContentWithIdAndTag()
 
-		 val pearl2Ad = pearlAd(adContentWithIdAndTag).filter{item => fangTag.toSet.contains(item._1)}
-		 val geli2Ad = geliAd(adContentWithIdAndTag, gelis).filter{item => allTag.toSet.contains(item._1)}
-		 val pearl2Geli = pearlAndGeli(adContentWithIdAndTag, gelis)
+		 val pearl2Ad = pearlAd(adContentWithIdAndTag).filter{item => bFangTag.value.toSet.contains(item._1)}
+		 val geli2Ad = geliAd(adContentWithIdAndTag, bGelis.value)
+		 val pearl2Geli = pearlAndGeli(adContentWithIdAndTag, bGelis.value)
 
 
 		 val result = pearl2Ad.join(pearl2Geli.map{

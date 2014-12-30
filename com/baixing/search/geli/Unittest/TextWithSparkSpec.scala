@@ -1,6 +1,6 @@
 package com.baixing.search.geli.Unittest
 
-import com.baixing.search.geli.Util.{Text, SparkUtil}
+import com.baixing.search.geli.Util.{Text, Spark}
 import org.apache.spark.SparkContext
 import org.scalatest.FlatSpec
 
@@ -9,7 +9,7 @@ import org.scalatest.FlatSpec
  */
 class TextWithSparkSpec extends FlatSpec{
 	var sc : SparkContext = _
-	SparkUtil.silenceSpark()
+	Spark.silenceSpark()
 
 
 	it should "success in spark test" in {

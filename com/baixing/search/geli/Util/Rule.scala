@@ -43,7 +43,6 @@ object Rule {
 	}
 
 
-
 	def aboveFreqThres(word : String, freq : Double): Boolean ={
 		if (word.length == 2)
 			freq > 4e-6

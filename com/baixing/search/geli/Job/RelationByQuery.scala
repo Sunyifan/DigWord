@@ -125,13 +125,11 @@ object RelationByQuery {
 			val pearl2UV = pearlUV(adTag, uaWithAd.union(seoWithAd))
 
 
-			val gelis = Data.gelis().map {
-				line: String =>
-					line.split(",")(0).substring(1)
-			}.filter{ geli => allTag.toSet.contains(geli)}.collect
+			val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env.output()).map{line => line.split(",").head}
+			val bGelis = Env.sparkContext().broadcast(gelis.collect())
 
-			val geli2UV = geliUV(gelis, uaWithQuery.union(seoWithQuery))
-
+			val geli2UV = geliUV(bGelis.value, uaWithQuery.union(seoWithQuery))
+			geli2UV.take(100).foreach(println)
 
 			val result = pearl2UV.cartesian(geli2UV).map{
 				item : ((String, Array[String]), (String, Array[String])) =>
@@ -151,11 +149,10 @@ object RelationByQuery {
 						(pearl2geliUV.toDouble / geliUV.toDouble) * (totalUV.toDouble / pearlUV.toDouble),
 						(pearl2geliUV.toDouble / geliUV.toDouble)
 						)
-			}.filter(_._4 > 1).filter(item => fangTag.toSet.contains(item._1)).map{
+			}.filter(_._4 > 1).map{
 				item  =>
 					(item._1, (item._2, item._3, item._4, item._5))
-			}.groupByKey()
-				.flatMap{
+			}.groupByKey().flatMap{
 				item : (String, Iterable[(String, Double, Double, Double)]) =>
 					val sortedArray = item._2.toArray.sortWith(_._4 > _._4)
 					sortedArray.map{ elem : (String, Double, Double, Double) => (item._1, elem._1, elem._2, elem._3, elem._4)}
