@@ -15,6 +15,10 @@ object Data {
 							.filter(row => row(2).toString >= Env.sparkConf().get("fromdate") && row(2).toString <= Env.sparkConf().get("todate"))
 								.map(row => row(0).toString + " " + row(1).toString)
 	}
+
+	def tag() : RDD[String] = {
+		DataSource.getRaw("logs.tagn", Array("name")).map(row => row(0).toString)
+	}
 }
 
 object DataSource{
