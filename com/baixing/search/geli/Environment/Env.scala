@@ -26,9 +26,16 @@ object Env {
 		new HiveContext(sc)
 	}
 
-	def init(args : Array[String]): Unit = {
+	def init(): Unit = {
 		sparkConf()
 		sparkContext()
+	}
+
+	def digEnv(args : Array[String]) : Unit = {
+		sparkConf().set("area_id", args(0))
+		sparkConf().set("category", args(1))
+		sparkConf().set("fromdate", args(2))
+		sparkConf().set("todate", args(3))
 	}
 }
 
