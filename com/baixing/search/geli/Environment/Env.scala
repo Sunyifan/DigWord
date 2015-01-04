@@ -37,5 +37,9 @@ object Env {
 		sparkConf().set("fromdate", args(2))
 		sparkConf().set("todate", args(3))
 	}
+
+	override def toString() : String = {
+		sparkConf().get("area_id") + "-" + sparkConf().get("category") + sparkConf().get("fromdate") + "-" + sparkConf().get("todate")
+	}
 }
 
