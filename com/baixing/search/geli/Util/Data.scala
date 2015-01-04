@@ -193,8 +193,8 @@ object Data {
 		Env.hiveContext().sql(fangTagQuery()).map{ row => (row(0).toString, row(1).toString)}
 	}
 
-	def fangTag() : Array[String] = {
-		Env.hiveContext().sql(fangTagQuery).map{row => row(0).toString}.map((_, null)).sortByKey().keys.collect()
+	def fangTag() : RDD[String] = {
+		Env.hiveContext().sql(fangTagQuery).map{row => row(0).toString}
 	}
 
 	def fangTagQuery() : String = {

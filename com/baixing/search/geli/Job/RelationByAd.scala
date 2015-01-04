@@ -84,7 +84,7 @@ object RelationByAd {
 
 		 val fangTag = Data.fangTag()
 
-		 val bFangTag = Env.sparkContext().broadcast(fangTag)
+		 val bFangTag = Env.sparkContext().broadcast(fangTag.collect())
 		 val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env.output()).map{line => line.split(",").head}
 
 		 val bGelis = Env.sparkContext().broadcast(gelis.collect())
