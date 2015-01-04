@@ -1,33 +1,29 @@
-package com.baixing.search.geli.Digger
+package com.baixing.search.geli.Util
 
 import com.baixing.search.geli.Environment.Env
-import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
-
-import com.baixing.search.geli.Util.Text
+import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
 
 /**
  * Created by abzyme-baixing on 14-11-12.
  */
-object ThresholdDigger {
+object Digger {
 	def textLength(text : RDD[String]) : Long = text.map(_.length).reduce(_ + _)
 
-	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{item : String => Text.preproccess(item)}
+	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{line : String => Text.preproccess(line)}
 
 	def words(processedText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
 		processedText.flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
 	def frequency(words : RDD[String], textLength : Long) : RDD[(String, Double)] = {
-		words.map((word : String) => (word, 1))
-				.reduceByKey(_ + _)
-					.map{item : (String, Int) => (item._1, item._2.toDouble / (textLength - item._1.length + 1))}
+		words.map((word : String) => (word, 1.0 / textLength)).reduceByKey(_ + _)
 	}
 
 	def newConsolidate(words : RDD[String], frequency : RDD[(String, Double)]): RDD[(String, Double)] = {
-		val temp = words.filter(_.length > 1).flatMap {
+		words.filter(_.length > 1).flatMap {
 			word =>
 				val ret = new ArrayBuffer[(String, String)]
 
@@ -42,9 +38,7 @@ object ThresholdDigger {
 
 				ret += ((word, word))
 				ret
-		}
-
-		temp.groupByKey().join(frequency).flatMap{
+		}.groupByKey().join(frequency).flatMap{
 			item : (String, (Iterable[String], Double)) =>
 				val ret = new ArrayBuffer[(String, (String, Double))]
 
@@ -76,10 +70,9 @@ object ThresholdDigger {
 		}
 	}
 
-	def consolidate(words : RDD[String], frequency : RDD[(String, Double)]) : RDD[(String, Double)] = {
+	def consolidate(frequency : RDD[(String, Double)]) : RDD[(String, Double)] = {
 		val dictionary = frequency.collect().toMap
 		val broadcastedDict = Env.sparkContext().broadcast(dictionary)
-
 
 		frequency.filter(_._1.length > 1).map{
 			item : (String, Double)=>
@@ -106,11 +99,11 @@ object ThresholdDigger {
 		val leftFreedom = words.filter(_.length > 1)
 									.map{word : String => (word.substring(1, word.length), word.charAt(0))}
 										.groupByKey
-											.map{ item : (String, Iterable[Char]) => (item._1, Text.entrophy(item._2.toArray))}
+											.map{ item : (String, Iterable[Char]) => (item._1, entrophy(item._2.toArray))}
 		val rightFreedom = words.filter(_.length > 1)
 									.map{word : String => (word.substring(0, word.length - 1), word.charAt(word.length - 1))}
 										.groupByKey
-											.map{ item : (String, Iterable[Char]) => (item._1, Text.entrophy(item._2.toArray))}
+											.map{ item : (String, Iterable[Char]) => (item._1, entrophy(item._2.toArray))}
 
 		leftFreedom.cogroup(rightFreedom)
 						.map{
@@ -135,12 +128,32 @@ object ThresholdDigger {
 		val word = words(text)
 
 		val freq = frequency(word, len).filter(_._2 > freqThres)
-		val consol = consolidate(word, freq).filter(_._2 > consolThres)
+		val consol = consolidate(freq).filter(_._2 > consolThres)
 		val free = freedom(word).filter(_._2 > freeThres)
 
 		freq.join(consol).join(free).map{
 			item : (String, ((Double, Double), Double))
 				=> (item._1, (item._2._1._1, item._2._1._2, item._2._2))
 		}.sortByKey().filter{item => item._1.length > 1 && item._1.length < 5}
+	}
+
+
+	def entrophy(charArray : Array[Char]): Double ={
+		val len = charArray.length.toDouble
+		val charCnt = scala.collection.mutable.Map[Char, Int]()
+		var ret : Double = 0.0
+
+		for (c <- charArray){
+			if (!charCnt.contains(c))
+				charCnt += (c -> 0)
+
+			charCnt(c) += 1
+		}
+
+		for((k, v) <- charCnt){
+			ret = ret - v.toDouble / len * Math.log(v.toDouble / len)
+		}
+
+		ret
 	}
 }
