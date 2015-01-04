@@ -12,6 +12,6 @@ object Data {
 		import hc._
 
 		hc.table(tableName).select(fields.map(field => symbolToUnresolvedAttribute(Symbol(field))):_*)
-
 	}
 }
+
