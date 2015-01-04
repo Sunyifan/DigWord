@@ -9,10 +9,10 @@ import org.apache.spark.sql.SchemaRDD
  */
 object Data {
 	def adContent() : RDD[String] ={
-		DataSource.getRaw("logs.ad_content", Array("title", "content", "area_id", "category", "dt"))
-					.filter(row => row(2).toString == Env.sparkConf().get("area_id"))
-						.filter(row => row(3).toString == Env.sparkConf().get("category"))
-							.filter(row => row(4).toString >= Env.sparkConf().get("fromdate") && row(5).toString <= Env.sparkConf().get("todate"))
+		DataSource.getRaw("logs.ad_content", Array("title", "content", "dt", "area_id", "category"))
+					.filter(row => row(3).toString == Env.sparkConf().get("area_id"))
+						.filter(row => row(4).toString == Env.sparkConf().get("category"))
+							.filter(row => row(2).toString >= Env.sparkConf().get("fromdate") && row(2).toString <= Env.sparkConf().get("todate"))
 								.map(row => row(0).toString + " " + row(1).toString)
 	}
 }
