@@ -1,7 +1,7 @@
 package com.baixing.search.geli.Job
 
 import com.baixing.search.geli.Environment.Env
-import com.baixing.search.geli.Util.{Digger, Data}
+import com.baixing.search.geli.Util.{Rule, Digger, Data}
 import org.apache.spark.SparkContext._
 
 /**
@@ -27,7 +27,7 @@ object DigAll {
 									.filter{q : String => q.length != 0 && q != "null"}
 										.repartition(20)
 
-		val all = ad.union(query).union(seo).filter{item => allTags.toSet.contains(item)}
+		val all = ad.union(query).union(seo)
 
 
 		val len = Digger.textLength(all)
@@ -41,7 +41,10 @@ object DigAll {
 		freq.join(consol).join(free).map{
 			item : (String, ((Double, Double), Double))
 			=> (item._1, (item._2._1._1, item._2._1._2, item._2._2))
-		}.sortByKey().saveAsTextFile("/user/sunyifan/geli/all/" + Env)
-
+		}.filter(item => Rule.containChinese(item._1))
+			.filter(item => Rule.containPearl(item._1, allTags.collect.toSet))
+				// .filter(item => Rule.aboveFreqThres(item._1, item._2._1))
+					.filter(item => Rule.aboveConsolThres(item._1, item._2._2))
+						.filter(item => Rule.aboveFreeThres(item._1, item._2._3))
 	}
 }
