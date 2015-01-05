@@ -14,7 +14,7 @@ object Digger {
 
 	def processedText(text : RDD[String]) : RDD[String] = text.flatMap{line : String => Text.preproccess(line)}
 
-	def words(processedText : RDD[String], maxWordLength : Int = 10) : RDD[String] = {
+	def words(processedText : RDD[String], maxWordLength : Int = 6) : RDD[String] = {
 		processedText.flatMap{line : String => Text.splitWord(line, maxWordLength)}
 	}
 
