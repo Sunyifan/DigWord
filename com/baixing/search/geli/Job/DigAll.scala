@@ -34,7 +34,7 @@ object DigAll {
 				// .filter(item => Rule.aboveFreqThres(item._1, item._2._1))
 					.filter(item => Rule.aboveConsolThres(item._1, item._2._2))
 						.filter(item => Rule.aboveFreeThres(item._1, item._2._3))
-							.sortByKey().map(item => item._1 + "," + item._2._1 + "," + item._2._2 + "," + item._2._3)
+							.map(item => item._1 + "," + item._2._1 + "," + item._2._2 + "," + item._2._3)
 								.saveAsTextFile("/user/sunyifan/geli/all/" + Env)
 	}
 }
