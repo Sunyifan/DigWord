@@ -13,7 +13,7 @@ object DigAll {
 
 		val allTags = Data.allTag()
 
-		val ad = Data.adContent().repartition(20)
+		val ad = Data.adContent().repartition(Env.getProperty("partition").toInt)
 
 		val query = Env.sparkContext().textFile("/user/sunyifan/ua/" + Env)
 							.filter{row => row.split(",").length == 3}
