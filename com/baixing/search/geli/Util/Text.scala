@@ -2,9 +2,6 @@ package com.baixing.search.geli.Util
 
 import scala.collection.mutable.ArrayBuffer
 
-/**
- * Created by abzyme-baixing on 14-11-12.
- */
 object Text {
 	private val stopString = Array("\\", "\\r", "\\n")
 	private val reservedString = Array("㎡")
@@ -54,7 +51,23 @@ object Text {
 		for (i <- 0 to len - 1) {
 			var j: Int = 1
 			while (i + j <= len && j <= wordLength) {
-				val tmp: String = v.substring(i, i + j)
+				var tmp: String = v.substring(i, i + j)
+				var flag =true
+				var ti=i
+				var tj=j
+				while(tmp(0).isLetterOrDigit && flag) {
+					if (ti>0 && v(ti).isLetterOrDigit)
+						tmp=v(ti)+tmp
+					else
+						flag=false
+				}
+				flag = true
+				while(tmp(tmp.length-1).isLetterOrDigit && flag) {
+					if (tj<v.length && v(tj).isLetterOrDigit)
+						tmp+=v(tj)
+					else
+						flag=false
+				}
 				greetStrings += tmp
 				j += 1
 			}

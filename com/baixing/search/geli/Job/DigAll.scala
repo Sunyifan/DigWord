@@ -30,11 +30,11 @@ object DigAll {
 			=> (item._1, (item._2._1._1, item._2._1._2, item._2._2))
 		}.filter(item => Rule.containChinese(item._1))
 			.filter(item => !Rule.containPearl(item._1, fangTag))
-				.filter(item => !Rule.isPearl(item._1, fangTag.toSet))
+				//.filter(item => !Rule.isPearl(item._1, fangTag.toSet))
 				// .filter(item => Rule.aboveFreqThres(item._1, item._2._1))
 					.filter(item => Rule.aboveConsolThres(item._1, item._2._2))
 						.filter(item => Rule.aboveFreeThres(item._1, item._2._3))
 							.map(item => item._1 + "," + item._2._1 + "," + item._2._2 + "," + item._2._3)
-								.saveAsTextFile("/user/sunyifan/geli/all/" + Env)
+								.saveAsTextFile("/user/tianxing/geli/all/" + Env)
 	}
 }
