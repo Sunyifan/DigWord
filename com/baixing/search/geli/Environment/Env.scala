@@ -37,14 +37,6 @@ object Env {
 		return conf.get(key)
 	}
 
-	def job() : String = {
-		getProperty("type").split("\\.")(0)
-	}
-
-	def src() : String = {
-		getProperty("type").split("\\.")(1)
-	}
-
 	override def toString() : String= {
 		getProperty("area_id") + "-" + getProperty("category") + "-" + getProperty("fromdate") + "-" + getProperty("todate")
 	}
