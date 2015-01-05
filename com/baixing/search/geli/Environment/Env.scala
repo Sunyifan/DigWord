@@ -34,6 +34,10 @@ object Env {
 
 	private val ROOT = "/user/sunyifan"
 
+	def getProperty(key : String) : String = {
+		return conf.get(key)
+	}
+
 	def job() : String = {
 		getProperty("type").split("\\.")(0)
 	}

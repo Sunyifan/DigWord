@@ -1,7 +1,9 @@
 package com.baixing.search.geli.Util
 
 import com.baixing.search.geli.Environment.Env
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.SparkContext._
 
 /**
  * Created by abzyme-baixing on 14-11-27.
@@ -85,8 +87,6 @@ object Data {
 							.map{ row => (row(0).toString, row(2).toString)}
 	}
 
-		hc.table(tableName).select(fields.map(field => symbolToUnresolvedAttribute(Symbol(field))):_*)
-	}
 
 	def UserActionWithQueryAndAd(): RDD[(String, String, String)] = {
 		RawUserAction().filter{row =>
