@@ -50,6 +50,7 @@ object Data {
 	}
 
 
+
 	// user action interface
 	def adVisitor(): RDD[(String, String)] ={
 		RawUserAction().filter{
@@ -128,6 +129,7 @@ object Data {
 	}
 
 
+
 	// seo interface
 	def SeoWithAd() : RDD[(String, String)] = {
 		RawUserAction().filter{row => row(2).toString != 0}
@@ -168,6 +170,7 @@ object Data {
 	}
 
 
+
 	// interface for tag and tag alias
 	def allTag() : RDD[String] = {
 		Env.sparkContext().textFile("/user/sunyifan/allTag.csv").map((_, null)).sortByKey().keys
@@ -193,8 +196,8 @@ object Data {
 		Env.hiveContext().sql(fangTagQuery()).map{ row => (row(0).toString, row(1).toString)}
 	}
 
-	def fangTag() : Array[String] = {
-		Env.hiveContext().sql(fangTagQuery).map{row => row(0).toString}.map((_, null)).sortByKey().keys.collect()
+	def fangTag() : RDD[String] = {
+		Env.hiveContext().sql(fangTagQuery).map{row => row(0).toString}.map((_, null)).sortByKey().keys
 	}
 
 	def fangTagQuery() : String = {
@@ -211,9 +214,7 @@ object Data {
 
 	// interface for geli
 	def gelis() : RDD[String] = {
-		Env.sparkContext().textFile("/user/sunyifan/geli/" + Env.src() + "/" +
-										Env.getProperty("area_id") + "-" + Env.getProperty("category") +
-											"-" + Env.getProperty("fromdate") + "-" + Env.getProperty("todate"))
+		Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env)
 	}
 
 }
