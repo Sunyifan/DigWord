@@ -56,13 +56,13 @@ object RelationByQuery {
 			val fangTag = Data.fangTag()
 			val allTag = Data.allTag()
 
-			val adTag = Env.sparkContext().textFile("/user/sunyifan/adTag/" + Env.output()).filter(_.length > 0).map{
+			val adTag = Env.sparkContext().textFile("/user/sunyifan/adTag/" + Env).filter(_.length > 0).map{
 				line : String =>
 					val item = line.substring(1, line.length - 1).split(",")
 					(item.head.replace("(", ""), item.last.replace(")", ""))
 			}.repartition(20)
 
-			val rawUserAction = Env.sparkContext().textFile("/user/sunyifan/ua/" + Env.output()).map{
+			val rawUserAction = Env.sparkContext().textFile("/user/sunyifan/ua/" + Env).map{
 				line : String =>
 					val item = line.split(",")
 					(item.head.replace("[", ""),
@@ -93,7 +93,7 @@ object RelationByQuery {
 					(item._1, q)
 			}
 
-			val rawSeo = Env.sparkContext().textFile("/user/sunyifan/seo/" + Env.output()).filter{
+			val rawSeo = Env.sparkContext().textFile("/user/sunyifan/seo/" + Env).filter{
 				line => line.split(",").length == 3
 			}.map{
 				line : String =>
@@ -125,7 +125,7 @@ object RelationByQuery {
 			val pearl2UV = pearlUV(adTag, uaWithAd.union(seoWithAd))
 
 
-			val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env.output()).map{line => line.split(",").head}
+			val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env).map{line => line.split(",").head}
 			val bGelis = Env.sparkContext().broadcast(gelis.collect())
 
 			val geli2UV = geliUV(bGelis.value, uaWithQuery.union(seoWithQuery))
@@ -158,6 +158,6 @@ object RelationByQuery {
 					sortedArray.map{ elem : (String, Double, Double, Double) => (item._1, elem._1, elem._2, elem._3, elem._4)}
 			}
 
-			result.saveAsTextFile("/user/sunyifan/relation/all/" + Env.output() + "-query")
+			result.saveAsTextFile("/user/sunyifan/relation/all/" + Env + "-query")
 		}
 }

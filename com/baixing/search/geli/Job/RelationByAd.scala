@@ -85,7 +85,7 @@ object RelationByAd {
 		 val fangTag = Data.fangTag()
 
 		 val bFangTag = Env.sparkContext().broadcast(fangTag)
-		 val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env.output()).map{line => line.split(",").head}
+		 val gelis = Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env).map{line => line.split(",").head}
 
 		 val bGelis = Env.sparkContext().broadcast(gelis.collect())
 		 val ads = Data.adContentWithId()
@@ -134,6 +134,6 @@ object RelationByAd {
 					 sortedArray.map{ elem : (String, Double, Double, Double) => (item._1, elem._1, elem._2, elem._3, elem._4)}
 				 }
 
-		 result.saveAsTextFile("/user/sunyifan/relation/all/" + Env.output() + "-ad")
+		 result.saveAsTextFile("/user/sunyifan/relation/all/" + Env + "-ad")
 	 }
  }

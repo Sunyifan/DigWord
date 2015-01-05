@@ -48,7 +48,7 @@ object Env {
 		getProperty("type").split("\\.")(1)
 	}
 
-	def output() : String= {
+	override def toString() : String= {
 		getProperty("area_id") + "-" + getProperty("category") + "-" + getProperty("fromdate") + "-" + getProperty("todate")
 	}
 }
