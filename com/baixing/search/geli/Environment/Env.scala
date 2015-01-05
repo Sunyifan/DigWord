@@ -31,7 +31,7 @@ object Env {
 		sparkContext()
 	}
 
-	private val ROOT = "/user/sunyifan"
+	private val ROOT = "/user/tianxing"
 
 	override def toString() : String= {
 		getProperty("area_id") + "-" + getProperty("category") + "-" + getProperty("fromdate") + "-" + getProperty("todate")

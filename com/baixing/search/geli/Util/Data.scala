@@ -171,7 +171,7 @@ object Data {
 
 	// interface for tag and tag alias
 	def allTag() : RDD[String] = {
-		Env.sparkContext().textFile("/user/sunyifan/allTag.csv").map((_, null)).sortByKey().keys
+		Env.sparkContext().textFile("/user/tianxing/allTag.csv").map((_, null)).sortByKey().keys
 	}
 
 	def tagQuery() : String = {
@@ -212,7 +212,7 @@ object Data {
 
 	// interface for geli
 	def gelis() : RDD[String] = {
-		Env.sparkContext().textFile("/user/sunyifan/geli/all/" + Env)
+		Env.sparkContext().textFile("/user/tianxing/geli/all/" + Env)
 	}
 
 }
