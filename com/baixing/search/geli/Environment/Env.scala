@@ -29,7 +29,6 @@ object Env {
 	def init(args : Array[String]): Unit = {
 		sparkConf()
 		sparkContext()
-		sparkContext().setCheckpointDir("/user/sunyifan/checkpoint")
 	}
 
 	private val ROOT = "/user/sunyifan"
