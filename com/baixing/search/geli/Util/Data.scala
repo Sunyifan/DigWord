@@ -177,7 +177,7 @@ object Data {
 	def tagQuery() : String = {
 		"\nSELECT\n" +
 		"   name,\n" +
-		"   dimensionId\n" +
+		"   dimension_id\n" +
 		"FROM\n" +
 		"   logs.tagn"
 	}
