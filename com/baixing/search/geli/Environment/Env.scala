@@ -29,21 +29,12 @@ object Env {
 	def init(args : Array[String]): Unit = {
 		sparkConf()
 		sparkContext()
-		sparkContext().setCheckpointDir("/user/sunyifan/checkpoint")
 	}
 
 	private val ROOT = "/user/sunyifan"
 
 	def getProperty(key : String) : String = {
 		return conf.get(key)
-	}
-
-	def job() : String = {
-		getProperty("type").split("\\.")(0)
-	}
-
-	def src() : String = {
-		getProperty("type").split("\\.")(1)
 	}
 
 	override def toString() : String= {
