@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
  * Created by abzyme-baixing on 14-11-12.
  */
 object Text {
-	private val stopString = Array("\\r", "\\n")
+	private val stopString = Array("\\", "\\r", "\\n")
 	private val reservedString = Array("㎡")
 
 	private def isValidChar(c : Character): Boolean ={

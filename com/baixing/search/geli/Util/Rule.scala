@@ -10,7 +10,7 @@ object Rule {
 		pearlTags.contains(word)
 	}
 
-	def containPearl(word : String, pearlTags : Set[String]) : Boolean ={
+	def containPearl(word : String, pearlTags : Array[String]) : Boolean ={
 		val loop = new Breaks
 		var ret = false
 
