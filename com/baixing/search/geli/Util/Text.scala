@@ -16,7 +16,7 @@ object Text {
 	private def removeStopString(str : String) : Array[String] = {
 		var ret = str
 		for (s <- stopString){
-			ret = ret.replace(s, " ")
+			ret = ret.replace(s, "")
 		}
 
 		ret.split(" ").filter(_.length != 0)

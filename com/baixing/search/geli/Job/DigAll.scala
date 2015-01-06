@@ -22,8 +22,9 @@ object DigAll {
 		val words = Digger.words(text)
 
 		val freq = Digger.frequency(words, len)
-		val consol = Digger.consolidate(freq)
-		val free = Digger.freedom(words)
+		val consol = Digger.consolidate(freq).filter(item => Rule.aboveConsolThres(item._1, item._2))
+		val free = Digger.freedom(words).filter(item => Rule.aboveFreeThres(item._1, item._2))
+
 
 		freq.join(consol).join(free).map{
 			item : (String, ((Double, Double), Double))
@@ -31,10 +32,7 @@ object DigAll {
 		}.filter(item => Rule.containChinese(item._1))
 			.filter(item => !Rule.containPearl(item._1, fangTag))
 				.filter(item => !Rule.isPearl(item._1, fangTag.toSet))
-				// .filter(item => Rule.aboveFreqThres(item._1, item._2._1))
-					.filter(item => Rule.aboveConsolThres(item._1, item._2._2))
-						.filter(item => Rule.aboveFreeThres(item._1, item._2._3))
-							.map(item => item._1 + "," + item._2._1 + "," + item._2._2 + "," + item._2._3)
-								.saveAsTextFile("/user/sunyifan/geli/all/" + Env)
+					.map(item => item._1 + "," + item._2._1 + "," + item._2._2 + "," + item._2._3)
+						.saveAsTextFile("/user/sunyifan/geli/all/" + Env)
 	}
 }
