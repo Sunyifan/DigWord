@@ -83,8 +83,6 @@ object Digger {
 				val leftWord = word.substring(0, num)
 				val rightWord = word.substring(num)
 
-				val leftWordIndex = broadcastedDict.value(leftWord)
-				val rightWordIndex = broadcastedDict.value(rightWord)
 				if( broadcastedDict.value.contains(leftWord) && broadcastedDict.value.contains(rightWord) ){
 					consolidate = math.min(consolidate, broadcastedDict.value(leftWord)  /
 						(broadcastedDict.value(rightWord) * broadcastedDict.value(rightWord)))
@@ -126,7 +124,6 @@ object Digger {
 		val len = textLength(rawText)
 		val text = processedText(rawText)
 		val word = words(text)
-
 		val freq = frequency(word, len).filter(_._2 > freqThres)
 		val consol = consolidate(freq).filter(_._2 > consolThres)
 		val free = freedom(word).filter(_._2 > freeThres)

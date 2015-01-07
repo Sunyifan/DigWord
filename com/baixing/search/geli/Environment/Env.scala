@@ -6,7 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
  */
 object Env {
 	private var sc : SparkContext = null
-	private val conf : SparkConf = new SparkConf()
+	private val conf : SparkConf = new SparkConf().set("spark.driver.maxResultSize","10g")
 	def sparkContext() : SparkContext = {
 		if (sc == null)
 			sc = new SparkContext(conf)
